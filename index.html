@@ -8,12 +8,16 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;overflow:hidden;font-family:'Segoe UI',sans-serif}
 canvas{display:block}
+
 #header{position:fixed;top:20px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;z-index:10}
 #header h1{font-size:2.2rem;background:linear-gradient(135deg,#cc66ff,#ff8844,#ff44aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:5px}
 #header p{color:rgba(255,255,255,0.45);font-size:0.78rem;margin-top:5px;letter-spacing:2px}
-#controls{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:10}
+
+#controls{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:10;flex-wrap:wrap;justify-content:center}
 .btn{background:rgba(255,255,255,0.05);border:1px solid rgba(200,100,255,0.25);color:#fff;padding:10px 20px;border-radius:30px;cursor:pointer;font-size:0.78rem;letter-spacing:1px;transition:all .3s;backdrop-filter:blur(12px)}
 .btn:hover{background:rgba(180,80,255,0.2);border-color:#cc66ff}
+
+/* Planet info panel */
 #panel{position:fixed;right:-420px;top:50%;transform:translateY(-50%);width:360px;background:rgba(8,4,20,0.88);border:1px solid rgba(180,80,255,0.35);border-radius:22px;padding:32px;z-index:10;transition:right .5s cubic-bezier(.34,1.56,.64,1);backdrop-filter:blur(20px)}
 #panel.open{right:20px}
 #panel h2{font-size:1.6rem;margin-bottom:4px}
@@ -24,23 +28,44 @@ canvas{display:block}
 #pdesc{margin-top:14px;color:rgba(255,255,255,0.55);font-size:0.81rem;line-height:1.65}
 #closebtn{position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.2rem;cursor:pointer}
 #closebtn:hover{color:#fff}
-#tooltip{position:fixed;background:rgba(15,5,30,0.92);border:1px solid rgba(180,80,255,0.45);color:#fff;padding:5px 14px;border-radius:20px;font-size:0.78rem;pointer-events:none;display:none;z-index:20;backdrop-filter:blur(10px)}
-#loading{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity 1s}
-#loading h2{background:linear-gradient(135deg,#cc66ff,#ff8844);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.6rem;letter-spacing:5px;margin-bottom:20px}
-#loading p{color:rgba(255,255,255,0.3);font-size:0.75rem;letter-spacing:3px;margin-bottom:20px}
-#prog{width:220px;height:2px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
-#progbar{height:100%;width:0%;background:linear-gradient(90deg,#cc66ff,#ff8844);border-radius:2px;transition:width .3s}
-.spin{width:56px;height:56px;border:2px solid transparent;border-top-color:#cc66ff;border-right-color:#ff8844;border-radius:50%;animation:sp 1.2s linear infinite;margin-bottom:18px}
-@keyframes sp{to{transform:rotate(360deg)}}
-#lore{position:fixed;left:20px;top:50%;transform:translateY(-50%);width:220px;background:rgba(8,4,20,0.7);border:1px solid rgba(180,80,255,0.2);border-radius:16px;padding:18px;z-index:10;backdrop-filter:blur(12px)}
+
+/* System Log toggle button */
+#lore-toggle{position:fixed;left:20px;top:20px;z-index:20;background:rgba(180,80,255,0.15);border:1px solid rgba(180,80,255,0.4);color:#cc66ff;padding:10px 16px;border-radius:30px;cursor:pointer;font-size:0.78rem;letter-spacing:1px;backdrop-filter:blur(12px);transition:all .3s;display:flex;align-items:center;gap:7px}
+#lore-toggle:hover{background:rgba(180,80,255,0.28);border-color:#cc66ff}
+
+/* System Log panel */
+#lore{position:fixed;left:-280px;top:70px;width:230px;background:rgba(8,4,20,0.88);border:1px solid rgba(180,80,255,0.25);border-radius:18px;padding:20px;z-index:15;backdrop-filter:blur(16px);transition:left .45s cubic-bezier(.34,1.56,.64,1)}
+#lore.open{left:20px}
 #lore h3{color:#cc66ff;font-size:0.85rem;letter-spacing:2px;margin-bottom:10px}
 #lore p{color:rgba(255,255,255,0.4);font-size:0.74rem;line-height:1.6}
 #lore .obj{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)}
 #lore .obj-name{color:#ff9966;font-size:0.8rem;font-weight:600;margin-bottom:3px}
 #lore .obj-tag{color:rgba(255,255,255,0.3);font-size:0.7rem}
+#lore-close{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,0.3);font-size:1rem;cursor:pointer}
+#lore-close:hover{color:#fff}
+
+#tooltip{position:fixed;background:rgba(15,5,30,0.92);border:1px solid rgba(180,80,255,0.45);color:#fff;padding:5px 14px;border-radius:20px;font-size:0.78rem;pointer-events:none;display:none;z-index:20;backdrop-filter:blur(10px)}
+
+#loading{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity 1s}
+#loading h2{background:linear-gradient(135deg,#cc66ff,#ff8844);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.6rem;letter-spacing:5px;margin-bottom:12px}
+#loading p{color:rgba(255,255,255,0.3);font-size:0.75rem;letter-spacing:3px;margin-bottom:20px}
+#prog{width:220px;height:2px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+#progbar{height:100%;width:0%;background:linear-gradient(90deg,#cc66ff,#ff8844);border-radius:2px;transition:width .3s}
+.spin{width:56px;height:56px;border:2px solid transparent;border-top-color:#cc66ff;border-right-color:#ff8844;border-radius:50%;animation:sp 1.2s linear infinite;margin-bottom:18px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+@media(max-width:600px){
+  #header h1{font-size:1.4rem;letter-spacing:2px}
+  #header p{font-size:0.65rem}
+  #panel{width:90vw;right:-100vw}
+  #panel.open{right:5vw}
+  #lore{width:75vw}
+  .btn{padding:8px 14px;font-size:0.7rem}
+}
 </style>
 </head>
 <body>
+
 <div id="loading">
   <div class="spin"></div>
   <h2>ASTREA SYSTEM</h2>
@@ -50,10 +75,15 @@ canvas{display:block}
 
 <div id="header">
   <h1>✦ ASTREA SYSTEM ✦</h1>
-  <p>DRAG TO ORBIT · SCROLL TO ZOOM · CLICK PLANETS TO EXPLORE</p>
+  <p>DRAG TO ORBIT · SCROLL TO ZOOM · CLICK PLANETS</p>
 </div>
 
+<!-- System Log toggle button -->
+<button id="lore-toggle">📋 SYSTEM LOG</button>
+
+<!-- System Log panel -->
 <div id="lore">
+  <button id="lore-close">✕</button>
   <h3>✦ SYSTEM LOG</h3>
   <p>A distant star system at the edge of the Velian Nebula. Two life-bearing worlds orbit the ancient star Astrea.</p>
   <div class="obj">
@@ -90,52 +120,21 @@ canvas{display:block}
 <script>
 const BODIES = [
   {
-    name: "Xeron-9",
-    type: "Oceanic Life-World",
-    color: 0x1a2aff,
-    emissive: 0x0a0033,
-    size: 1.2,
-    orbit: 26,
-    speed: 0.022,
-    tilt: 0.35,
-    rotSpeed: 0.009,
-    atmColor: 0x6633ff,
-    atmOpacity: 0.12,
-    stats: {
-      "Classification": "Life-Bearing",
-      "Orbit Radius": "26 AU-e",
-      "Day Cycle": "31 Astrea-hours",
-      "Surface": "~80% Ocean",
-      "Atmosphere": "Dense, Violet-Hued",
-      "Status": "INHABITED"
-    },
-    desc: "A vast oceanic world draped in deep blues and shifting purples. Its twin moons create massive tidal surges that sculpt its few island continents. Bioluminescent life thrives in its endless seas."
+    name:"Xeron-9", type:"Oceanic Life-World",
+    color:0x1a2aff, emissive:0x0a0033, size:1.2, orbit:26, speed:0.022, tilt:0.35, rotSpeed:0.009,
+    atmColor:0x6633ff, atmOpacity:0.12,
+    stats:{"Classification":"Life-Bearing","Orbit Radius":"26 AU-e","Day Cycle":"31 Astrea-hours","Surface":"~80% Ocean","Atmosphere":"Dense, Violet-Hued","Status":"INHABITED"},
+    desc:"A vast oceanic world draped in deep blues and shifting purples. Its twin moons create massive tidal surges that sculpt its few island continents. Bioluminescent life thrives in its endless seas."
   },
   {
-    name: "Spe",
-    type: "Verdant Life-World",
-    color: 0x33cc55,
-    emissive: 0x001a00,
-    size: 0.95,
-    orbit: 46,
-    speed: 0.013,
-    tilt: 0.6,
-    rotSpeed: 0.011,
-    atmColor: 0xff66aa,
-    atmOpacity: 0.1,
-    stats: {
-      "Classification": "Life-Bearing",
-      "Orbit Radius": "46 AU-e",
-      "Day Cycle": "19 Astrea-hours",
-      "Surface": "~65% Landmass",
-      "Atmosphere": "Thin, Pink-Tinged",
-      "Status": "INHABITED"
-    },
-    desc: "A lush, wild world of sprawling emerald jungles and pink-hued skies. Spe's rapid rotation creates fierce cyclonic storms that feed its hyper-dense forests. Life here evolved fast and strange."
+    name:"Spe", type:"Verdant Life-World",
+    color:0x33cc55, emissive:0x001a00, size:0.95, orbit:46, speed:0.013, tilt:0.6, rotSpeed:0.011,
+    atmColor:0xff66aa, atmOpacity:0.1,
+    stats:{"Classification":"Life-Bearing","Orbit Radius":"46 AU-e","Day Cycle":"19 Astrea-hours","Surface":"~65% Landmass","Atmosphere":"Thin, Pink-Tinged","Status":"INHABITED"},
+    desc:"A lush, wild world of sprawling emerald jungles and pink-hued skies. Spe's rapid rotation creates fierce cyclonic storms that feed its hyper-dense forests. Life here evolved fast and strange."
   }
 ];
 
-// Scene
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 3000);
 camera.position.set(0, 35, 100);
@@ -145,207 +144,133 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
-// Lights
 scene.add(new THREE.AmbientLight(0x110022, 0.6));
 const starLight = new THREE.PointLight(0xdd88ff, 4, 600);
 scene.add(starLight);
-const warmFill = new THREE.PointLight(0xff6622, 1, 300);
-scene.add(warmFill);
+scene.add(new THREE.PointLight(0xff6622, 1, 300));
 
 // Stars
-const starGeo = new THREE.BufferGeometry();
-const sPos = new Float32Array(10000*3), sCol = new Float32Array(10000*3);
+const sG=new THREE.BufferGeometry(), sP=new Float32Array(10000*3), sC=new Float32Array(10000*3);
 for(let i=0;i<10000*3;i+=3){
-  const r=300+Math.random()*700, th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1);
-  sPos[i]=r*Math.sin(ph)*Math.cos(th); sPos[i+1]=r*Math.sin(ph)*Math.sin(th); sPos[i+2]=r*Math.cos(ph);
-  const mix=Math.random();
-  sCol[i]=0.6+0.4*mix; sCol[i+1]=0.3+0.4*(1-mix); sCol[i+2]=0.8+0.2*mix;
+  const r=300+Math.random()*700,th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+  sP[i]=r*Math.sin(ph)*Math.cos(th);sP[i+1]=r*Math.sin(ph)*Math.sin(th);sP[i+2]=r*Math.cos(ph);
+  const m=Math.random();sC[i]=0.6+0.4*m;sC[i+1]=0.3+0.4*(1-m);sC[i+2]=0.8+0.2*m;
 }
-starGeo.setAttribute('position',new THREE.BufferAttribute(sPos,3));
-starGeo.setAttribute('color',new THREE.BufferAttribute(sCol,3));
-const starField = new THREE.Points(starGeo, new THREE.PointsMaterial({size:0.45,vertexColors:true,transparent:true,opacity:0.85}));
+sG.setAttribute('position',new THREE.BufferAttribute(sP,3));
+sG.setAttribute('color',new THREE.BufferAttribute(sC,3));
+const starField=new THREE.Points(sG,new THREE.PointsMaterial({size:0.45,vertexColors:true,transparent:true,opacity:0.85}));
 scene.add(starField);
 
 // Nebula
-const nebGeo = new THREE.BufferGeometry();
-const nPos=new Float32Array(4000*3), nCol=new Float32Array(4000*3);
+const nG=new THREE.BufferGeometry(),nP=new Float32Array(4000*3),nC=new Float32Array(4000*3);
 const nc=[[0.7,0.2,1],[1,0.4,0.1],[0.9,0.2,0.6],[0.4,0.1,0.8]];
 for(let i=0;i<4000;i++){
-  const r=50+Math.random()*200, th=Math.random()*Math.PI*2;
-  nPos[i*3]=r*Math.cos(th); nPos[i*3+1]=(Math.random()-.5)*35; nPos[i*3+2]=r*Math.sin(th);
+  const r=50+Math.random()*200,th=Math.random()*Math.PI*2;
+  nP[i*3]=r*Math.cos(th);nP[i*3+1]=(Math.random()-.5)*35;nP[i*3+2]=r*Math.sin(th);
   const c=nc[Math.floor(Math.random()*nc.length)];
-  nCol[i*3]=c[0]; nCol[i*3+1]=c[1]; nCol[i*3+2]=c[2];
+  nC[i*3]=c[0];nC[i*3+1]=c[1];nC[i*3+2]=c[2];
 }
-nebGeo.setAttribute('position',new THREE.BufferAttribute(nPos,3));
-nebGeo.setAttribute('color',new THREE.BufferAttribute(nCol,3));
-scene.add(new THREE.Points(nebGeo,new THREE.PointsMaterial({size:1.8,vertexColors:true,transparent:true,opacity:0.15})));
+nG.setAttribute('position',new THREE.BufferAttribute(nP,3));
+nG.setAttribute('color',new THREE.BufferAttribute(nC,3));
+scene.add(new THREE.Points(nG,new THREE.PointsMaterial({size:1.8,vertexColors:true,transparent:true,opacity:0.15})));
 
-// Astrea (the star)
-const astreaMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(6,48,48),
-  new THREE.MeshBasicMaterial({color:0xdd77ff})
-);
+// Astrea
+const astreaMesh=new THREE.Mesh(new THREE.SphereGeometry(6,48,48),new THREE.MeshBasicMaterial({color:0xdd77ff}));
 scene.add(astreaMesh);
-
-// Outer glow layers
 [{c:0xdd44ff,s:7.5,o:0.12},{c:0xff6622,s:9,o:0.07},{c:0xaa22ee,s:11,o:0.04}].forEach(g=>{
-  scene.add(new THREE.Mesh(
-    new THREE.SphereGeometry(g.s,32,32),
-    new THREE.MeshBasicMaterial({color:g.c,transparent:true,opacity:g.o,side:THREE.FrontSide})
-  ));
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(g.s,32,32),new THREE.MeshBasicMaterial({color:g.c,transparent:true,opacity:g.o,side:THREE.FrontSide})));
 });
-
-// Corona particles
-const corGeo=new THREE.BufferGeometry();
-const cP=new Float32Array(800*3);
-for(let i=0;i<800;i++){
-  const r=6.5+Math.random()*3, th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1);
-  cP[i*3]=r*Math.sin(ph)*Math.cos(th); cP[i*3+1]=r*Math.sin(ph)*Math.sin(th); cP[i*3+2]=r*Math.cos(ph);
-}
-corGeo.setAttribute('position',new THREE.BufferAttribute(cP,3));
-const corona=new THREE.Points(corGeo,new THREE.PointsMaterial({color:0xff9944,size:0.25,transparent:true,opacity:0.6}));
+const corG=new THREE.BufferGeometry(),cP2=new Float32Array(800*3);
+for(let i=0;i<800;i++){const r=6.5+Math.random()*3,th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);cP2[i*3]=r*Math.sin(ph)*Math.cos(th);cP2[i*3+1]=r*Math.sin(ph)*Math.sin(th);cP2[i*3+2]=r*Math.cos(ph);}
+corG.setAttribute('position',new THREE.BufferAttribute(cP2,3));
+const corona=new THREE.Points(corG,new THREE.PointsMaterial({color:0xff9944,size:0.25,transparent:true,opacity:0.6}));
 scene.add(corona);
 
 // Planets
-const planetMeshes=[];
-const labels=[];
-
+const planetMeshes=[],labels=[];
 BODIES.forEach(p=>{
-  // Orbit ring
-  const orb=new THREE.Mesh(
-    new THREE.RingGeometry(p.orbit-.06,p.orbit+.06,120),
-    new THREE.MeshBasicMaterial({color:0x442255,transparent:true,opacity:0.35,side:THREE.DoubleSide})
-  );
-  orb.rotation.x=Math.PI/2; scene.add(orb);
-
-  // Planet sphere
+  const orb=new THREE.Mesh(new THREE.RingGeometry(p.orbit-.06,p.orbit+.06,120),new THREE.MeshBasicMaterial({color:0x442255,transparent:true,opacity:0.35,side:THREE.DoubleSide}));
+  orb.rotation.x=Math.PI/2;scene.add(orb);
   const mat=new THREE.MeshPhongMaterial({color:p.color,emissive:p.emissive,shininess:25,specular:0x333344});
   const mesh=new THREE.Mesh(new THREE.SphereGeometry(p.size,52,52),mat);
-  mesh.rotation.z=p.tilt;
-  mesh.userData={...p, angle:Math.random()*Math.PI*2};
-
-  // Atmosphere
-  const atmMesh=new THREE.Mesh(
-    new THREE.SphereGeometry(p.size*1.1,32,32),
-    new THREE.MeshBasicMaterial({color:p.atmColor,transparent:true,opacity:p.atmOpacity,side:THREE.FrontSide})
-  );
-  mesh.add(atmMesh);
-
-  // Second color band texture (fake)
-  if(p.name==="Xeron-9"){
-    // Add purple continent blobs via smaller sphere overlay with offset
-    const overlayMat=new THREE.MeshPhongMaterial({color:0x6622cc,emissive:0x110033,transparent:true,opacity:0.35,wireframe:false});
-    const overlay=new THREE.Mesh(new THREE.SphereGeometry(p.size+0.01,16,16),overlayMat);
-    // Clip-like effect using irregular low-poly
-    mesh.add(overlay);
-  }
-  if(p.name==="Spe"){
-    const overlayMat=new THREE.MeshPhongMaterial({color:0xff44aa,emissive:0x220011,transparent:true,opacity:0.28});
-    const overlay=new THREE.Mesh(new THREE.SphereGeometry(p.size+0.01,14,14),overlayMat);
-    mesh.add(overlay);
-  }
-
-  // Label
-  const cv=document.createElement('canvas'); cv.width=256; cv.height=64;
-  const cx=cv.getContext('2d');
-  cx.font='bold 26px Segoe UI'; cx.fillStyle='rgba(255,255,255,0.92)'; cx.textAlign='center';
-  cx.fillText(p.name,128,40);
+  mesh.rotation.z=p.tilt;mesh.userData={...p,angle:Math.random()*Math.PI*2};
+  mesh.add(new THREE.Mesh(new THREE.SphereGeometry(p.size*1.1,32,32),new THREE.MeshBasicMaterial({color:p.atmColor,transparent:true,opacity:p.atmOpacity,side:THREE.FrontSide})));
+  if(p.name==="Xeron-9") mesh.add(new THREE.Mesh(new THREE.SphereGeometry(p.size+.01,16,16),new THREE.MeshPhongMaterial({color:0x6622cc,emissive:0x110033,transparent:true,opacity:0.35})));
+  if(p.name==="Spe") mesh.add(new THREE.Mesh(new THREE.SphereGeometry(p.size+.01,14,14),new THREE.MeshPhongMaterial({color:0xff44aa,emissive:0x220011,transparent:true,opacity:0.28})));
+  const cv=document.createElement('canvas');cv.width=256;cv.height=64;
+  const cx=cv.getContext('2d');cx.font='bold 26px Segoe UI';cx.fillStyle='rgba(255,255,255,0.92)';cx.textAlign='center';cx.fillText(p.name,128,40);
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));
-  sp.scale.set(8,2,1); sp.position.y=p.size+2.8;
-  mesh.add(sp); labels.push(sp);
-
-  scene.add(mesh);
-  planetMeshes.push(mesh);
+  sp.scale.set(8,2,1);sp.position.y=p.size+2.8;mesh.add(sp);labels.push(sp);
+  scene.add(mesh);planetMeshes.push(mesh);
 });
 
-// Raycaster / interaction
-const ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
-const tooltip=document.getElementById('tooltip');
-const panel=document.getElementById('panel');
-let isDrag=false, prevM={x:0,y:0};
-let sph={theta:0,phi:Math.PI/3,r:100}, tSph={...sph};
-let orbitPaused=false, showLabels=true;
-
+// Interaction
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+const tooltip=document.getElementById('tooltip'),panel=document.getElementById('panel');
+let isDrag=false,prevM={x:0,y:0},sph={theta:0,phi:Math.PI/3,r:100},tSph={...sph};
+let orbitPaused=false,showLabels=true;
 renderer.domElement.style.cursor='grab';
+
 renderer.domElement.addEventListener('mousedown',e=>{isDrag=true;prevM={x:e.clientX,y:e.clientY}});
 renderer.domElement.addEventListener('mouseup',()=>isDrag=false);
 renderer.domElement.addEventListener('mousemove',e=>{
-  if(isDrag){
-    tSph.theta-=(e.clientX-prevM.x)*0.005;
-    tSph.phi=Math.max(0.1,Math.min(Math.PI-.1,tSph.phi+(e.clientY-prevM.y)*0.005));
-    prevM={x:e.clientX,y:e.clientY};
-  }
-  mouse.x=(e.clientX/innerWidth)*2-1;
-  mouse.y=-(e.clientY/innerHeight)*2+1;
+  if(isDrag){tSph.theta-=(e.clientX-prevM.x)*.005;tSph.phi=Math.max(.1,Math.min(Math.PI-.1,tSph.phi+(e.clientY-prevM.y)*.005));prevM={x:e.clientX,y:e.clientY};}
+  mouse.x=(e.clientX/innerWidth)*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;
   ray.setFromCamera(mouse,camera);
   const hits=ray.intersectObjects(planetMeshes,false);
-  if(hits.length){
-    tooltip.style.display='block';
-    tooltip.style.left=e.clientX+12+'px';
-    tooltip.style.top=e.clientY-10+'px';
-    tooltip.textContent=hits[0].object.userData.name;
-    renderer.domElement.style.cursor='pointer';
-  } else {
-    tooltip.style.display='none';
-    renderer.domElement.style.cursor='grab';
-  }
+  if(hits.length){tooltip.style.display='block';tooltip.style.left=e.clientX+12+'px';tooltip.style.top=e.clientY-10+'px';tooltip.textContent=hits[0].object.userData.name;renderer.domElement.style.cursor='pointer';}
+  else{tooltip.style.display='none';renderer.domElement.style.cursor='grab';}
 });
-renderer.domElement.addEventListener('wheel',e=>{tSph.r=Math.max(18,Math.min(200,tSph.r+e.deltaY*.08))});
+renderer.domElement.addEventListener('wheel',e=>tSph.r=Math.max(18,Math.min(200,tSph.r+e.deltaY*.08)));
 renderer.domElement.addEventListener('click',e=>{
   ray.setFromCamera(mouse,camera);
   const hits=ray.intersectObjects(planetMeshes,false);
   if(hits.length) openPanel(hits[0].object.userData);
 });
 
+// Touch
+let lastT=null;
+renderer.domElement.addEventListener('touchstart',e=>{lastT=e.touches[0];isDrag=true;},{ passive:true });
+renderer.domElement.addEventListener('touchmove',e=>{if(!lastT)return;const t=e.touches[0];tSph.theta-=(t.clientX-lastT.clientX)*.005;tSph.phi=Math.max(.1,Math.min(Math.PI-.1,tSph.phi+(t.clientY-lastT.clientY)*.005));lastT=t;},{ passive:true });
+renderer.domElement.addEventListener('touchend',()=>{isDrag=false;lastT=null;});
+
 function openPanel(p){
   document.getElementById('pname').textContent=p.name;
   document.getElementById('pname').style.color='#'+new THREE.Color(p.color).getHexString();
   document.getElementById('ptype').textContent=p.type;
   document.getElementById('pdesc').textContent=p.desc;
-  let h='';
-  for(const[k,v] of Object.entries(p.stats)) h+=`<div class="stat"><span class="lbl">${k}</span><span class="val">${v}</span></div>`;
+  let h='';for(const[k,v] of Object.entries(p.stats))h+=`<div class="stat"><span class="lbl">${k}</span><span class="val">${v}</span></div>`;
   document.getElementById('pstats').innerHTML=h;
   panel.classList.add('open');
 }
 
 document.getElementById('closebtn').onclick=()=>panel.classList.remove('open');
-document.getElementById('btn-reset').onclick=()=>tSph={theta:0,phi:Math.PI/3,r:100};
+document.getElementById('btn-reset').onclick=()=>{tSph={theta:0,phi:Math.PI/3,r:100}};
 document.getElementById('btn-orbit').onclick=function(){orbitPaused=!orbitPaused;this.textContent=orbitPaused?'▶ RESUME ORBIT':'⏸ PAUSE ORBIT'};
 document.getElementById('btn-labels').onclick=function(){showLabels=!showLabels;labels.forEach(l=>l.visible=showLabels);this.textContent=showLabels?'⊙ LABELS: ON':'⊙ LABELS: OFF'};
+
+// System Log toggle
+const lore=document.getElementById('lore');
+document.getElementById('lore-toggle').onclick=()=>lore.classList.toggle('open');
+document.getElementById('lore-close').onclick=()=>lore.classList.remove('open');
 
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 
 // Loading
-let prg=0; const pb=document.getElementById('progbar'),ld=document.getElementById('loading');
+let prg=0;const pb=document.getElementById('progbar'),ld=document.getElementById('loading');
 const li=setInterval(()=>{prg+=Math.random()*18;if(prg>=100){prg=100;clearInterval(li);setTimeout(()=>{ld.style.opacity='0';setTimeout(()=>ld.style.display='none',900)},200)}pb.style.width=prg+'%'},120);
 
-// Animate
 let t=0;
 function animate(){
-  t+=0.004;
-  sph.theta+=(tSph.theta-sph.theta)*0.08;
-  sph.phi+=(tSph.phi-sph.phi)*0.08;
-  sph.r+=(tSph.r-sph.r)*0.08;
+  t+=.004;
+  sph.theta+=(tSph.theta-sph.theta)*.08;sph.phi+=(tSph.phi-sph.phi)*.08;sph.r+=(tSph.r-sph.r)*.08;
   camera.position.x=sph.r*Math.sin(sph.phi)*Math.sin(sph.theta);
   camera.position.y=sph.r*Math.cos(sph.phi);
   camera.position.z=sph.r*Math.sin(sph.phi)*Math.cos(sph.theta);
   camera.lookAt(0,0,0);
-
-  planetMeshes.forEach(m=>{
-    const p=m.userData;
-    if(!orbitPaused) p.angle+=p.speed*0.5;
-    m.position.x=Math.cos(p.angle)*p.orbit;
-    m.position.z=Math.sin(p.angle)*p.orbit;
-    m.position.y=Math.sin(p.angle*0.7)*2;
-    m.rotation.y+=p.rotSpeed;
-  });
-
-  // Astrea pulse
-  const pulse=1+0.04*Math.sin(t*2.5);
-  astreaMesh.scale.setScalar(pulse);
-  corona.rotation.y=t*0.3;
-  starField.rotation.y=t*0.0004;
-
+  planetMeshes.forEach(m=>{const p=m.userData;if(!orbitPaused)p.angle+=p.speed*.5;m.position.x=Math.cos(p.angle)*p.orbit;m.position.z=Math.sin(p.angle)*p.orbit;m.position.y=Math.sin(p.angle*.7)*2;m.rotation.y+=p.rotSpeed;});
+  const pulse=1+.04*Math.sin(t*2.5);astreaMesh.scale.setScalar(pulse);
+  corona.rotation.y=t*.3;starField.rotation.y=t*.0004;
   renderer.render(scene,camera);
 }
 renderer.setAnimationLoop(animate);
