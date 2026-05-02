@@ -24,9 +24,9 @@ canvas{display:block}
 <a href="index.html" id="backbtn">⟵ SYSTEM EXPLORER</a>
 <div id="title"><h1>✦ XERON-9 SURFACE ✦</h1><p>WASD / ARROWS TO MOVE · DRAG TO LOOK · HOVER CREATURES</p></div>
 <div id="info">
-  <div class="tag">🪼 Medusae</div>
+  <div class="tag">🪼 Lumina Jelly</div>
   <div class="tag">🦌 Lumindoe</div>
-  <div class="tag">🐇 Lumibuns</div>
+  <div class="tag">🐇 Coral Bunny</div>
 </div>
 <div id="label"><b id="lb-name"></b><span id="lb-desc"></span></div>
 <script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
@@ -195,7 +195,7 @@ function makeJellyfish(x, z) {
   
   g.position.set(x, 2, z);
   g.userData = {
-    type: 'Jelly', name: 'Medusae', desc: 'A floating translucent jellyfish. Gentle and cute. 🪼',
+    type: 'Jelly', name: 'Lumina Jelly', desc: 'A floating translucent jellyfish. Gentle and cute. 🪼',
     baseY: 2 + Math.random()*3, phase: Math.random()*Math.PI*2, speed: 0.01 + Math.random()*0.01,
     tentacles, tx: x, tz: z, angle: Math.random()*Math.PI*2
   };
@@ -212,75 +212,145 @@ for(let i=0; i<20; i++){
   makeJellyfish((Math.random()-0.5)*80, (Math.random()-0.5)*80);
 }
 
-// 2. Crystal Stag (Canter)
+// 2. Lumindoe (Starry Glowing Deer)
 function makeStag() {
   const g = new THREE.Group();
-  const bm = new THREE.MeshLambertMaterial({color: 0x4466aa});
-  const gm = new THREE.MeshLambertMaterial({color: 0x88ccff, emissive: 0x2266aa});
+  const bm = new THREE.MeshLambertMaterial({color: 0x07112c}); // Deep night blue
+  const antlerMat = new THREE.MeshLambertMaterial({color: 0xccffff, emissive: 0x33aacc, transparent: true, opacity: 0.9}); 
+  const ribbonMat = new THREE.MeshBasicMaterial({color: 0x88ccff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, side: THREE.DoubleSide});
   
-  // Body
-  const bodyGeo = THREE.CapsuleGeometry ? new THREE.CapsuleGeometry(0.3, 0.6, 4, 8) : new THREE.CylinderGeometry(0.3, 0.3, 0.6, 8);
-  const body = new THREE.Mesh(bodyGeo, bm);
+  // Elegant Body
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.9, 8), bm);
   body.rotation.z = Math.PI/2;
-  body.position.y = 0.8;
+  body.position.set(0, 1.3, 0);
   g.add(body);
   
-  // Neck
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 0.5), bm);
-  neck.position.set(0.4, 1.1, 0);
+  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), bm);
+  chest.position.set(0.4, 1.3, 0);
+  g.add(chest);
+
+  const rump = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), bm);
+  rump.position.set(-0.4, 1.3, 0);
+  g.add(rump);
+  
+  // Elegant Neck
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.18, 0.8), bm);
+  neck.position.set(0.6, 1.6, 0);
   neck.rotation.z = -Math.PI/4;
   g.add(neck);
   
   // Head
-  const head = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.5, 8), bm);
-  head.position.set(0.6, 1.3, 0);
-  head.rotation.z = -Math.PI/2;
+  const head = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 8), bm);
+  head.position.set(0.8, 1.9, 0);
+  head.rotation.z = -Math.PI/2.2;
   g.add(head);
+
+  // Ears
+  [-0.08, 0.08].forEach(zOff => {
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.25, 4), bm);
+    ear.position.set(0.7, 2.0, zOff*1.5);
+    ear.rotation.z = Math.PI/4;
+    ear.rotation.x = zOff > 0 ? Math.PI/5 : -Math.PI/5;
+    g.add(ear);
+  });
   
-  // Antlers (Glowing)
-  [-0.1, 0.1].forEach(zOff => {
-    const antler = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.04, 0.6), gm);
-    antler.position.set(0.5, 1.5, zOff);
-    antler.rotation.z = Math.PI/6;
-    antler.rotation.x = zOff > 0 ? Math.PI/8 : -Math.PI/8;
-    g.add(antler);
+  // Complex Glowing Antlers
+  [-0.08, 0.08].forEach(zOff => {
+    const antlerGrp = new THREE.Group();
     
-    const fork = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.03, 0.3), gm);
-    fork.position.set(0.55, 1.6, zOff*1.5);
-    fork.rotation.z = Math.PI/4;
-    g.add(fork);
+    const antler = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.03, 0.9), antlerMat);
+    antler.position.set(0, 0.45, 0);
+    antlerGrp.add(antler);
+    
+    const fork1 = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.02, 0.5), antlerMat);
+    fork1.position.set(0.15, 0.5, zOff > 0 ? 0.1 : -0.1);
+    fork1.rotation.z = Math.PI/4;
+    fork1.rotation.x = zOff > 0 ? Math.PI/6 : -Math.PI/6;
+    antlerGrp.add(fork1);
+
+    const fork2 = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.015, 0.4), antlerMat);
+    fork2.position.set(-0.1, 0.6, zOff > 0 ? 0.05 : -0.05);
+    fork2.rotation.z = -Math.PI/6;
+    fork2.rotation.x = zOff > 0 ? Math.PI/8 : -Math.PI/8;
+    antlerGrp.add(fork2);
+
+    const fork3 = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.012, 0.3), antlerMat);
+    fork3.position.set(0.2, 0.75, zOff > 0 ? 0.15 : -0.15);
+    fork3.rotation.z = Math.PI/3;
+    antlerGrp.add(fork3);
+    
+    antlerGrp.position.set(0.7, 2.0, zOff);
+    antlerGrp.rotation.z = Math.PI/8;
+    antlerGrp.rotation.x = zOff > 0 ? Math.PI/6 : -Math.PI/6;
+    g.add(antlerGrp);
   });
   
   // Eyes
-  [-0.12, 0.12].forEach(zOff => {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04), new THREE.MeshBasicMaterial({color: 0xffffff}));
-    eye.position.set(0.65, 1.35, zOff);
+  [-0.06, 0.06].forEach(zOff => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.025), new THREE.MeshBasicMaterial({color: 0xffffff}));
+    eye.position.set(0.9, 1.95, zOff);
     g.add(eye);
   });
   
-  // Legs
+  // Slender Legs
   const legs = [];
-  [[-0.3, -0.15], [-0.3, 0.15], [0.3, -0.15], [0.3, 0.15]].forEach(([xOff, zOff]) => {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.6), bm);
-    leg.position.set(xOff, 0.4, zOff);
-    g.add(leg);
-    legs.push({mesh: leg, xOff, zOff});
+  [[-0.35, -0.15], [-0.35, 0.15], [0.35, -0.15], [0.35, 0.15]].forEach(([xOff, zOff]) => {
+    const legGrp = new THREE.Group();
+    legGrp.position.set(xOff, 1.3, zOff);
+    
+    const legMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.015, 1.3), bm);
+    legMesh.position.set(0, -0.65, 0);
+    legGrp.add(legMesh);
+    
+    const hoof = new THREE.Mesh(new THREE.SphereGeometry(0.03), antlerMat);
+    hoof.position.set(0, -0.65, 0);
+    legMesh.add(hoof);
+    
+    g.add(legGrp);
+    legs.push({mesh: legGrp, xOff, zOff});
   });
+
+  // Starry spots
+  const spotsGeo = new THREE.BufferGeometry();
+  const spotsPos = [];
+  for(let i=0; i<50; i++) {
+    spotsPos.push(
+      (Math.random()-0.5)*0.9,
+      1.1 + Math.random()*0.4,
+      (Math.random()-0.5)*0.35
+    );
+  }
+  spotsGeo.setAttribute('position', new THREE.Float32BufferAttribute(spotsPos, 3));
+  const spotsMat = new THREE.PointsMaterial({color: 0xddffff, size: 0.04, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending});
+  const spots = new THREE.Points(spotsGeo, spotsMat);
+  g.add(spots);
+
+  // Ethereal Ribbons
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.7, 0.6, 0.5),
+    new THREE.Vector3(0, 1.9, 0.8),
+    new THREE.Vector3(0.9, 1.6, 0),
+    new THREE.Vector3(0, 0.9, -0.8),
+    new THREE.Vector3(-0.6, 0.6, -0.5)
+  ], true);
+  const ribbonGeo = new THREE.TubeGeometry(curve, 64, 0.03, 8, true);
+  const ribbon = new THREE.Mesh(ribbonGeo, ribbonMat);
+  g.add(ribbon);
   
-  // Find an island to place it
+  // Light
+  const light = new THREE.PointLight(0xaaffff, 0.8, 6);
+  light.position.set(0.6, 2.2, 0);
+  g.add(light);
+  
   let island = islands[Math.floor(Math.random()*islands.length)];
   g.position.set(island.x + (Math.random()-0.5)*island.r, 0, island.z + (Math.random()-0.5)*island.r);
   
   g.castShadow = true;
-  g.traverse(c=>{if(c.isMesh)c.castShadow=true});
-  
-  const light = new THREE.PointLight(0x88ccff, 0.4, 3);
-  light.position.set(0.5, 1.5, 0);
-  g.add(light);
+  g.traverse(c=>{if(c.isMesh && c.material !== ribbonMat && c.material !== antlerMat && c.material !== spotsMat)c.castShadow=true});
   
   g.userData = {
-    type: 'Stag', name: 'Lumindoe', desc: 'A majestic deer with glowing antlers. Canters around the islands. 🦌',
-    legs, phase: Math.random()*Math.PI*2, speed: 0.03 + Math.random()*0.02, island
+    type: 'Stag', name: 'Lumindoe', desc: 'A majestic starry deer with intricate glowing antlers and ethereal ribbons. 🦌',
+    legs, phase: Math.random()*Math.PI*2, speed: 0.015 + Math.random()*0.01, island, ribbon
   };
   
   scene.add(g);
@@ -340,7 +410,7 @@ function makeBunny() {
   g.traverse(c=>{if(c.isMesh)c.castShadow=true});
   
   g.userData = {
-    type: 'Bunny', name: 'Lumibuns', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
+    type: 'Bunny', name: 'Coral Bunny', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
     phase: Math.random()*Math.PI*2, speed: 0.06 + Math.random()*0.02, island, origY: 0
   };
   
@@ -406,6 +476,10 @@ renderer.domElement.addEventListener('mousemove', e => {
     labelEl.style.display = 'none';
     renderer.domElement.style.cursor = 'grab';
   }
+});
+renderer.domElement.addEventListener('wheel', e => {
+  camera.fov = Math.max(30, Math.min(100, camera.fov + e.deltaY * 0.05));
+  camera.updateProjectionMatrix();
 });
 
 window.addEventListener('resize', () => {
@@ -505,6 +579,12 @@ function animate() {
         l.mesh.rotation.z = Math.sin(ud.phase * 2 + offset) * 0.5;
       });
       
+      // Ribbon
+      if(ud.ribbon) {
+        ud.ribbon.rotation.y = ud.phase * -0.5;
+        ud.ribbon.position.y = Math.sin(ud.phase * 3) * 0.1;
+      }
+      
     } else if (ud.type === 'Bunny') {
       // Hop
       ud.angle = ud.phase * 0.1;
@@ -538,3 +618,4 @@ renderer.setAnimationLoop(animate);
 </script>
 </body>
 </html>
+
