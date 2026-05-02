@@ -195,7 +195,7 @@ function makeJellyfish(x, z) {
   
   g.position.set(x, 2, z);
   g.userData = {
-    type: 'Jelly', name: 'Lumina Jelly', desc: 'A floating translucent jellyfish. Gentle and cute. 🪼',
+    type: 'Jelly', name: 'Medusae', desc: 'A floating translucent jellyfish. Gentle and cute. 🪼',
     baseY: 2 + Math.random()*3, phase: Math.random()*Math.PI*2, speed: 0.01 + Math.random()*0.01,
     tentacles, tx: x, tz: z, angle: Math.random()*Math.PI*2
   };
@@ -279,7 +279,7 @@ function makeStag() {
   g.add(light);
   
   g.userData = {
-    type: 'Stag', name: 'Crystal Stag', desc: 'A majestic deer with glowing antlers. Canters around the islands. 🦌',
+    type: 'Stag', name: 'Lumindoe', desc: 'A majestic deer with glowing antlers. Canters around the islands. 🦌',
     legs, phase: Math.random()*Math.PI*2, speed: 0.03 + Math.random()*0.02, island
   };
   
@@ -340,7 +340,7 @@ function makeBunny() {
   g.traverse(c=>{if(c.isMesh)c.castShadow=true});
   
   g.userData = {
-    type: 'Bunny', name: 'Coral Bunny', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
+    type: 'Bunny', name: 'Lumibuns', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
     phase: Math.random()*Math.PI*2, speed: 0.06 + Math.random()*0.02, island, origY: 0
   };
   
