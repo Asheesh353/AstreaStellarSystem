@@ -43,6 +43,7 @@ canvas{display:block}
 </style>
 </head>
 <body>
+<button class="btn" id="btn-toggle-log" style="position:fixed; top:20px; left:20px; z-index:20;">✦ TOGGLE LOG</button>
 <div id="loading">
   <div class="spin"></div>
   <h2>ASTREA SYSTEM</h2>
@@ -315,6 +316,8 @@ document.getElementById('closebtn').onclick=()=>panel.classList.remove('open');
 document.getElementById('btn-reset').onclick=()=>tSph={theta:0,phi:Math.PI/3,r:100};
 document.getElementById('btn-orbit').onclick=function(){orbitPaused=!orbitPaused;this.textContent=orbitPaused?'▶ RESUME ORBIT':'⏸ PAUSE ORBIT'};
 document.getElementById('btn-labels').onclick=function(){showLabels=!showLabels;labels.forEach(l=>l.visible=showLabels);this.textContent=showLabels?'⊙ LABELS: ON':'⊙ LABELS: OFF'};
+let logOpen=true;
+document.getElementById('btn-toggle-log').onclick=function(){logOpen=!logOpen;document.getElementById('lore').style.display=logOpen?'block':'none';};
 
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 
