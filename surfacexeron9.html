@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Planet Xeron-9 — Surface</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:'Segoe UI',sans-serif}
+canvas{display:block}
+#hud{position:fixed;top:0;left:0;width:100%;pointer-events:none;z-index:10}
+#title{position:fixed;top:18px;left:50%;transform:translateX(-50%);text-align:center}
+#title h1{font-size:1.8rem;background:linear-gradient(135deg,#66aaff,#aa66ff,#ff88ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:4px}
+#title p{color:rgba(255,255,255,0.4);font-size:0.72rem;margin-top:3px;letter-spacing:2px}
+#info{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:10px;pointer-events:all}
+.tag{background:rgba(0,0,0,0.5);border:1px solid rgba(150,150,255,0.3);color:rgba(255,255,255,0.8);padding:7px 16px;border-radius:20px;font-size:0.72rem;letter-spacing:1px;backdrop-filter:blur(10px)}
+#label{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-60px);background:rgba(5,10,25,0.85);border:1px solid rgba(150,150,255,0.4);color:#fff;padding:8px 18px;border-radius:16px;font-size:0.82rem;pointer-events:none;display:none;backdrop-filter:blur(10px);text-align:center;z-index:20;}
+#label b{color:#aaccff;display:block;font-size:1rem;margin-bottom:2px}
+#backbtn{position:fixed;top:20px;left:20px;background:rgba(0,0,0,0.5);border:1px solid rgba(150,150,255,0.3);color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:0.8rem;backdrop-filter:blur(10px);pointer-events:all;transition:all 0.3s;}
+#backbtn:hover{background:rgba(100,100,255,0.3);border-color:#aaccff;}
+</style>
+</head>
+<body>
+<a href="index.html" id="backbtn">⟵ SYSTEM EXPLORER</a>
+<div id="title"><h1>✦ XERON-9 SURFACE ✦</h1><p>WASD / ARROWS TO MOVE · DRAG TO LOOK · HOVER CREATURES</p></div>
+<div id="info">
+  <div class="tag">🪼 Lumina Jelly</div>
+  <div class="tag">🦌 Crystal Stag</div>
+  <div class="tag">🐇 Coral Bunny</div>
+</div>
+<div id="label"><b id="lb-name"></b><span id="lb-desc"></span></div>
+<script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050a1a);
+scene.fog = new THREE.FogExp2(0x050a1a, 0.015);
+
+const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.1, 500);
+camera.position.set(0, 10, 25);
+
+const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// Lights
+const moonLight = new THREE.DirectionalLight(0xaaeeff, 0.8);
+moonLight.position.set(-20, 30, -20);
+moonLight.castShadow = true;
+moonLight.shadow.mapSize.width = 2048; moonLight.shadow.mapSize.height = 2048;
+moonLight.shadow.camera.near = 0.5; moonLight.shadow.camera.far = 100;
+moonLight.shadow.camera.left = -50; moonLight.shadow.camera.right = 50;
+moonLight.shadow.camera.top = 50; moonLight.shadow.camera.bottom = -50;
+scene.add(moonLight);
+
+scene.add(new THREE.AmbientLight(0x0a1033, 1.0)); // Dark blue ambient
+const waterLight = new THREE.HemisphereLight(0x050a1a, 0x112266, 0.6);
+scene.add(waterLight);
+
+// Sky & Moons
+const starGeo = new THREE.BufferGeometry();
+const sPos = new Float32Array(3000 * 3);
+for(let i=0; i<3000; i++){
+  const r = 200 + Math.random()*200;
+  const th = Math.random()*Math.PI*2;
+  const ph = Math.acos(2*Math.random()-1);
+  sPos[i*3] = r * Math.sin(ph) * Math.cos(th);
+  sPos[i*3+1] = Math.abs(r * Math.sin(ph) * Math.sin(th));
+  sPos[i*3+2] = r * Math.cos(ph);
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xaaccff, size: 0.5, transparent: true, opacity: 0.8}));
+scene.add(stars);
+
+// Twin Moons
+const moon1 = new THREE.Mesh(new THREE.SphereGeometry(4, 32, 32), new THREE.MeshBasicMaterial({color: 0x88ccff}));
+moon1.position.set(-40, 30, -60);
+scene.add(moon1);
+const moonGlow1 = new THREE.Mesh(new THREE.SphereGeometry(4.5, 32, 32), new THREE.MeshBasicMaterial({color: 0x44aaff, transparent: true, opacity: 0.3}));
+moon1.add(moonGlow1);
+
+const moon2 = new THREE.Mesh(new THREE.SphereGeometry(2, 32, 32), new THREE.MeshBasicMaterial({color: 0xcc88ff}));
+moon2.position.set(-25, 20, -70);
+scene.add(moon2);
+const moonGlow2 = new THREE.Mesh(new THREE.SphereGeometry(2.4, 32, 32), new THREE.MeshBasicMaterial({color: 0xaa44ff, transparent: true, opacity: 0.3}));
+moon2.add(moonGlow2);
+
+// Ocean
+const oceanGeo = new THREE.PlaneGeometry(300, 300, 60, 60);
+const oceanMat = new THREE.MeshPhongMaterial({
+  color: 0x051a44, emissive: 0x020511, shininess: 80, specular: 0x88aaff, transparent: true, opacity: 0.85,
+  flatShading: true
+});
+const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+ocean.rotation.x = -Math.PI/2;
+ocean.receiveShadow = true;
+scene.add(ocean);
+
+const oceanBase = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshBasicMaterial({color: 0x010515}));
+oceanBase.rotation.x = -Math.PI/2;
+oceanBase.position.y = -2;
+scene.add(oceanBase);
+
+const origOceanZ = Array.from(oceanGeo.attributes.position.array);
+
+// Islands
+const islands = [];
+function makeIsland(x, z, radius) {
+  const geo = new THREE.ConeGeometry(radius, radius*0.8, 16, 4, true);
+  // Modify vertices for irregularity
+  const pos = geo.attributes.position;
+  for(let i=0; i<pos.count; i++) {
+    if(pos.getY(i) < radius*0.4 && pos.getY(i) > -radius*0.1) {
+      pos.setX(i, pos.getX(i) + (Math.random()-0.5)*radius*0.3);
+      pos.setZ(i, pos.getZ(i) + (Math.random()-0.5)*radius*0.3);
+    }
+  }
+  geo.computeVertexNormals();
+  const mat = new THREE.MeshLambertMaterial({color: 0x111122});
+  const island = new THREE.Mesh(geo, mat);
+  island.position.set(x, -radius*0.2, z);
+  island.castShadow = true;
+  island.receiveShadow = true;
+  scene.add(island);
+  islands.push({x, z, r: radius});
+  
+  // Glowing Plants on island
+  for(let i=0; i<radius*2; i++){
+    const a = Math.random()*Math.PI*2;
+    const r2 = Math.random()*radius*0.7;
+    const px = x + Math.cos(a)*r2;
+    const pz = z + Math.sin(a)*r2;
+    const h = (1 - r2/radius) * (radius*0.8) - radius*0.6;
+    
+    const plantType = Math.random();
+    if(plantType < 0.5) {
+      // Mushroom
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.5), new THREE.MeshLambertMaterial({color: 0x223344}));
+      stem.position.set(px, h+0.25, pz);
+      scene.add(stem);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshLambertMaterial({color: 0x88ffcc, emissive: 0x228866}));
+      cap.position.set(px, h+0.5, pz);
+      scene.add(cap);
+      const glow = new THREE.PointLight(0x88ffcc, 0.3, 2);
+      glow.position.set(px, h+0.6, pz);
+      scene.add(glow);
+    } else {
+      // Tube plant
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8), new THREE.MeshLambertMaterial({color: 0xcc44ff, emissive: 0x6611aa}));
+      tube.position.set(px, h+0.4, pz);
+      tube.rotation.x = (Math.random()-0.5)*0.5;
+      tube.rotation.z = (Math.random()-0.5)*0.5;
+      scene.add(tube);
+    }
+  }
+}
+
+makeIsland(0, 0, 15);
+makeIsland(-20, -15, 10);
+makeIsland(25, -5, 12);
+makeIsland(-10, 20, 8);
+makeIsland(15, 15, 9);
+
+// Animals
+const animals = [];
+
+// 1. Jellyfish (Float)
+function makeJellyfish(x, z) {
+  const g = new THREE.Group();
+  
+  // Dome head
+  const headGeo = new THREE.SphereGeometry(0.6, 16, 16, 0, Math.PI*2, 0, Math.PI/2);
+  const headMat = new THREE.MeshLambertMaterial({color: 0xcc66ff, emissive: 0x5511aa, transparent: true, opacity: 0.7});
+  const head = new THREE.Mesh(headGeo, headMat);
+  g.add(head);
+  
+  // Inner glow
+  const inner = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({color: 0xffaaff}));
+  inner.position.y = 0.2;
+  g.add(inner);
+  
+  // Tentacles
+  const tentacles = [];
+  for(let i=0; i<6; i++){
+    const angle = (i/6) * Math.PI * 2;
+    const tenGeo = new THREE.CylinderGeometry(0.02, 0.01, 1.2, 4);
+    tenGeo.translate(0, -0.6, 0); // origin at top
+    const ten = new THREE.Mesh(tenGeo, new THREE.MeshLambertMaterial({color: 0xaa88ff, emissive: 0x331166}));
+    ten.position.set(Math.cos(angle)*0.4, 0, Math.sin(angle)*0.4);
+    g.add(ten);
+    tentacles.push({mesh: ten, phase: Math.random()*Math.PI*2});
+  }
+  
+  g.position.set(x, 2, z);
+  g.userData = {
+    type: 'Jelly', name: 'Lumina Jelly', desc: 'A floating translucent jellyfish. Gentle and cute. 🪼',
+    baseY: 2 + Math.random()*3, phase: Math.random()*Math.PI*2, speed: 0.01 + Math.random()*0.01,
+    tentacles, tx: x, tz: z, angle: Math.random()*Math.PI*2
+  };
+  
+  // Light
+  const light = new THREE.PointLight(0xcc66ff, 0.5, 4);
+  g.add(light);
+  
+  scene.add(g);
+  animals.push(g);
+}
+
+for(let i=0; i<20; i++){
+  makeJellyfish((Math.random()-0.5)*80, (Math.random()-0.5)*80);
+}
+
+// 2. Crystal Stag (Canter)
+function makeStag() {
+  const g = new THREE.Group();
+  const bm = new THREE.MeshLambertMaterial({color: 0x4466aa});
+  const gm = new THREE.MeshLambertMaterial({color: 0x88ccff, emissive: 0x2266aa});
+  
+  // Body
+  const bodyGeo = THREE.CapsuleGeometry ? new THREE.CapsuleGeometry(0.3, 0.6, 4, 8) : new THREE.CylinderGeometry(0.3, 0.3, 0.6, 8);
+  const body = new THREE.Mesh(bodyGeo, bm);
+  body.rotation.z = Math.PI/2;
+  body.position.y = 0.8;
+  g.add(body);
+  
+  // Neck
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 0.5), bm);
+  neck.position.set(0.4, 1.1, 0);
+  neck.rotation.z = -Math.PI/4;
+  g.add(neck);
+  
+  // Head
+  const head = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.5, 8), bm);
+  head.position.set(0.6, 1.3, 0);
+  head.rotation.z = -Math.PI/2;
+  g.add(head);
+  
+  // Antlers (Glowing)
+  [-0.1, 0.1].forEach(zOff => {
+    const antler = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.04, 0.6), gm);
+    antler.position.set(0.5, 1.5, zOff);
+    antler.rotation.z = Math.PI/6;
+    antler.rotation.x = zOff > 0 ? Math.PI/8 : -Math.PI/8;
+    g.add(antler);
+    
+    const fork = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.03, 0.3), gm);
+    fork.position.set(0.55, 1.6, zOff*1.5);
+    fork.rotation.z = Math.PI/4;
+    g.add(fork);
+  });
+  
+  // Eyes
+  [-0.12, 0.12].forEach(zOff => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04), new THREE.MeshBasicMaterial({color: 0xffffff}));
+    eye.position.set(0.65, 1.35, zOff);
+    g.add(eye);
+  });
+  
+  // Legs
+  const legs = [];
+  [[-0.3, -0.15], [-0.3, 0.15], [0.3, -0.15], [0.3, 0.15]].forEach(([xOff, zOff]) => {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.6), bm);
+    leg.position.set(xOff, 0.4, zOff);
+    g.add(leg);
+    legs.push({mesh: leg, xOff, zOff});
+  });
+  
+  // Find an island to place it
+  let island = islands[Math.floor(Math.random()*islands.length)];
+  g.position.set(island.x + (Math.random()-0.5)*island.r, 0, island.z + (Math.random()-0.5)*island.r);
+  
+  g.castShadow = true;
+  g.traverse(c=>{if(c.isMesh)c.castShadow=true});
+  
+  const light = new THREE.PointLight(0x88ccff, 0.4, 3);
+  light.position.set(0.5, 1.5, 0);
+  g.add(light);
+  
+  g.userData = {
+    type: 'Stag', name: 'Crystal Stag', desc: 'A majestic deer with glowing antlers. Canters around the islands. 🦌',
+    legs, phase: Math.random()*Math.PI*2, speed: 0.03 + Math.random()*0.02, island
+  };
+  
+  scene.add(g);
+  animals.push(g);
+}
+
+for(let i=0; i<6; i++) makeStag();
+
+// 3. Coral Bunny (Hop)
+function makeBunny() {
+  const g = new THREE.Group();
+  const m = new THREE.MeshLambertMaterial({color: 0xff66bb, emissive: 0x440022});
+  const gm = new THREE.MeshLambertMaterial({color: 0xffaadd, emissive: 0xcc2277});
+  
+  // Body
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), m);
+  body.scale.set(1.2, 0.9, 1);
+  body.position.y = 0.2;
+  g.add(body);
+  
+  // Head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), m);
+  head.position.set(0.2, 0.4, 0);
+  g.add(head);
+  
+  // Ears (Glowing)
+  [-0.08, 0.08].forEach(zOff => {
+    const earGeo = THREE.CapsuleGeometry ? new THREE.CapsuleGeometry(0.04, 0.2, 4, 8) : new THREE.CylinderGeometry(0.04, 0.04, 0.2, 8);
+    const ear = new THREE.Mesh(earGeo, gm);
+    ear.position.set(0.15, 0.65, zOff);
+    ear.rotation.z = Math.PI/8;
+    g.add(ear);
+  });
+  
+  // Eyes
+  [-0.1, 0.1].forEach(zOff => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04), new THREE.MeshBasicMaterial({color: 0x000000}));
+    eye.position.set(0.3, 0.45, zOff);
+    g.add(eye);
+    const shine = new THREE.Mesh(new THREE.SphereGeometry(0.015), new THREE.MeshBasicMaterial({color: 0xffffff}));
+    shine.position.set(0.32, 0.47, zOff + 0.01);
+    g.add(shine);
+  });
+  
+  // Tail (Glowing)
+  const tail = new THREE.Mesh(new THREE.SphereGeometry(0.08), gm);
+  tail.position.set(-0.25, 0.25, 0);
+  g.add(tail);
+  
+  const light = new THREE.PointLight(0xffaadd, 0.3, 2);
+  g.add(light);
+  
+  let island = islands[Math.floor(Math.random()*islands.length)];
+  g.position.set(island.x + (Math.random()-0.5)*island.r, 0, island.z + (Math.random()-0.5)*island.r);
+  
+  g.castShadow = true;
+  g.traverse(c=>{if(c.isMesh)c.castShadow=true});
+  
+  g.userData = {
+    type: 'Bunny', name: 'Coral Bunny', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
+    phase: Math.random()*Math.PI*2, speed: 0.06 + Math.random()*0.02, island, origY: 0
+  };
+  
+  scene.add(g);
+  animals.push(g);
+}
+
+for(let i=0; i<10; i++) makeBunny();
+
+// Interaction
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+const labelEl = document.getElementById('label');
+const lbName = document.getElementById('lb-name');
+const lbDesc = document.getElementById('lb-desc');
+
+let isDrag = false, prevM = {x:0, y:0};
+let tAz = 0, tEl = -0.05;
+let camAz = tAz, camEl = tEl;
+let camPos = new THREE.Vector3(0, 3.5, 25);
+let camTarget = new THREE.Vector3();
+
+let moveForward = false, moveBackward = false, turnLeft = false, turnRight = false;
+
+window.addEventListener('keydown', e => {
+  if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
+  if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
+  if(e.code === 'KeyA' || e.code === 'ArrowLeft') turnLeft = true;
+  if(e.code === 'KeyD' || e.code === 'ArrowRight') turnRight = true;
+});
+window.addEventListener('keyup', e => {
+  if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
+  if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
+  if(e.code === 'KeyA' || e.code === 'ArrowLeft') turnLeft = false;
+  if(e.code === 'KeyD' || e.code === 'ArrowRight') turnRight = false;
+});
+
+renderer.domElement.addEventListener('mousedown', e => {isDrag=true; prevM={x:e.clientX, y:e.clientY};});
+renderer.domElement.addEventListener('mouseup', () => isDrag=false);
+renderer.domElement.addEventListener('mousemove', e => {
+  if(isDrag){
+    tAz -= (e.clientX - prevM.x)*0.005;
+    tEl = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, tEl + (e.clientY - prevM.y)*0.005));
+    prevM = {x:e.clientX, y:e.clientY};
+  }
+  mouse.x = (e.clientX/innerWidth)*2 - 1;
+  mouse.y = -(e.clientY/innerHeight)*2 + 1;
+  
+  const hitObjects = [];
+  animals.forEach(a => a.traverse(c => {if(c.isMesh) hitObjects.push(c)}));
+  ray.setFromCamera(mouse, camera);
+  const hits = ray.intersectObjects(hitObjects, false);
+  
+  if(hits.length > 0){
+    let obj = hits[0].object;
+    while(obj.parent && !obj.userData.name) obj = obj.parent;
+    if(obj.userData.name){
+      lbName.textContent = obj.userData.name;
+      lbDesc.textContent = obj.userData.desc;
+      labelEl.style.display = 'block';
+      renderer.domElement.style.cursor = 'pointer';
+    }
+  } else {
+    labelEl.style.display = 'none';
+    renderer.domElement.style.cursor = 'grab';
+  }
+});
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// Animation Loop
+const clock = new THREE.Clock();
+function animate() {
+  const dt = clock.getDelta();
+  const time = clock.getElapsedTime();
+  
+  // Camera
+  if(turnLeft) tAz += dt * 1.5;
+  if(turnRight) tAz -= dt * 1.5;
+  
+  camAz += (tAz - camAz)*0.2;
+  camEl += (tEl - camEl)*0.2;
+  
+  const forwardX = Math.sin(camAz);
+  const forwardZ = Math.cos(camAz);
+  const moveSpeed = 15;
+  
+  if(moveForward) {
+    camPos.x -= forwardX * moveSpeed * dt;
+    camPos.z -= forwardZ * moveSpeed * dt;
+  }
+  if(moveBackward) {
+    camPos.x += forwardX * moveSpeed * dt;
+    camPos.z += forwardZ * moveSpeed * dt;
+  }
+  
+  // Constrain height
+  camPos.y = Math.max(2, Math.min(40, camPos.y));
+  
+  camera.position.copy(camPos);
+  
+  camTarget.x = camPos.x - Math.sin(camAz) * Math.cos(camEl);
+  camTarget.y = camPos.y + Math.sin(camEl);
+  camTarget.z = camPos.z - Math.cos(camAz) * Math.cos(camEl);
+  camera.lookAt(camTarget);
+  
+  // Ocean Waves
+  const pos = oceanGeo.attributes.position;
+  for(let i=0; i<pos.count; i++){
+    const x = origOceanZ[i*3];
+    const y = origOceanZ[i*3+1];
+    // Create tidal surge effect
+    const z = Math.sin(x*0.1 + time) * 0.5 + Math.sin(y*0.1 + time*1.2) * 0.5 + Math.sin((x+y)*0.05 + time*0.5) * 1.2;
+    pos.setZ(i, z);
+  }
+  pos.needsUpdate = true;
+  
+  // Animals
+  animals.forEach(a => {
+    const ud = a.userData;
+    ud.phase += dt * ud.speed * 50;
+    
+    if(ud.type === 'Jelly') {
+      // Float
+      ud.tx += Math.sin(ud.angle) * ud.speed;
+      ud.tz += Math.cos(ud.angle) * ud.speed;
+      a.position.x = ud.tx;
+      a.position.z = ud.tz;
+      a.position.y = ud.baseY + Math.sin(ud.phase*0.5) * 1.5;
+      
+      // Tentacles
+      ud.tentacles.forEach(t => {
+        t.mesh.rotation.x = Math.sin(ud.phase + t.phase) * 0.3;
+        t.mesh.rotation.z = Math.cos(ud.phase + t.phase) * 0.3;
+      });
+      
+      if(Math.random() < 0.01) ud.angle += (Math.random()-0.5);
+      
+    } else if (ud.type === 'Stag') {
+      // Canter (Move in circles around island)
+      ud.angle = ud.phase * 0.2;
+      const r = ud.island.r * 0.6;
+      const nx = ud.island.x + Math.sin(ud.angle) * r;
+      const nz = ud.island.z + Math.cos(ud.angle) * r;
+      
+      const dx = nx - a.position.x;
+      const dz = nz - a.position.z;
+      a.rotation.y = Math.atan2(dx, dz) - Math.PI/2;
+      
+      a.position.x = nx;
+      a.position.z = nz;
+      
+      // Bobbing
+      a.position.y = Math.abs(Math.sin(ud.phase * 2)) * 0.2;
+      
+      // Legs
+      ud.legs.forEach((l, i) => {
+        const offset = (i%2===0) ? 0 : Math.PI;
+        l.mesh.rotation.z = Math.sin(ud.phase * 2 + offset) * 0.5;
+      });
+      
+    } else if (ud.type === 'Bunny') {
+      // Hop
+      ud.angle = ud.phase * 0.1;
+      const r = ud.island.r * 0.8;
+      
+      if(Math.random() < 0.02) {
+        ud.targetX = ud.island.x + (Math.random()-0.5)*r;
+        ud.targetZ = ud.island.z + (Math.random()-0.5)*r;
+      }
+      
+      if(ud.targetX !== undefined) {
+        const dx = ud.targetX - a.position.x;
+        const dz = ud.targetZ - a.position.z;
+        const dist = Math.sqrt(dx*dx + dz*dz);
+        if(dist > 0.1) {
+          a.position.x += (dx/dist) * ud.speed;
+          a.position.z += (dz/dist) * ud.speed;
+          a.rotation.y = Math.atan2(dx, dz) - Math.PI/2;
+          
+          a.position.y = Math.abs(Math.sin(ud.phase * 4)) * 0.5;
+        } else {
+          a.position.y = 0;
+        }
+      }
+    }
+  });
+  
+  renderer.render(scene, camera);
+}
+renderer.setAnimationLoop(animate);
+</script>
+</body>
+</html>
