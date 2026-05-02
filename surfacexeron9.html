@@ -24,9 +24,9 @@ canvas{display:block}
 <a href="index.html" id="backbtn">⟵ SYSTEM EXPLORER</a>
 <div id="title"><h1>✦ XERON-9 SURFACE ✦</h1><p>WASD / ARROWS TO MOVE · DRAG TO LOOK · HOVER CREATURES</p></div>
 <div id="info">
-  <div class="tag">🪼 Lumina Jelly</div>
+  <div class="tag">🪼 Medusae</div>
   <div class="tag">🦌 Lumindoe</div>
-  <div class="tag">🐇 Coral Bunny</div>
+  <div class="tag">🐇 Lumibuns</div>
 </div>
 <div id="label"><b id="lb-name"></b><span id="lb-desc"></span></div>
 <script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
@@ -195,7 +195,7 @@ function makeJellyfish(x, z) {
   
   g.position.set(x, 2, z);
   g.userData = {
-    type: 'Jelly', name: 'Lumina Jelly', desc: 'A floating translucent jellyfish. Gentle and cute. 🪼',
+    type: 'Jelly', name: 'Medusae', desc: 'A floating translucent jellyfish. Gentle and cute. 🪼',
     baseY: 2 + Math.random()*3, phase: Math.random()*Math.PI*2, speed: 0.01 + Math.random()*0.01,
     tentacles, tx: x, tz: z, angle: Math.random()*Math.PI*2
   };
@@ -410,7 +410,7 @@ function makeBunny() {
   g.traverse(c=>{if(c.isMesh)c.castShadow=true});
   
   g.userData = {
-    type: 'Bunny', name: 'Coral Bunny', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
+    type: 'Bunny', name: 'Lumibuns', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
     phase: Math.random()*Math.PI*2, speed: 0.06 + Math.random()*0.02, island, origY: 0
   };
   
