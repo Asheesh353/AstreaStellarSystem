@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Planet Spe — Surface</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:'Segoe UI',sans-serif}
+canvas{display:block}
+#hud{position:fixed;top:0;left:0;width:100%;pointer-events:none;z-index:10}
+#title{position:fixed;top:18px;left:50%;transform:translateX(-50%);text-align:center}
+#title h1{font-size:1.8rem;background:linear-gradient(135deg,#88ff88,#ff88cc,#cc88ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:4px}
+#title p{color:rgba(255,255,255,0.4);font-size:0.72rem;margin-top:3px;letter-spacing:2px}
+#info{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:10px;pointer-events:all}
+.tag{background:rgba(0,0,0,0.5);border:1px solid rgba(255,180,255,0.3);color:rgba(255,255,255,0.7);padding:7px 16px;border-radius:20px;font-size:0.72rem;letter-spacing:1px;backdrop-filter:blur(10px)}
+#label{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-60px);background:rgba(10,5,20,0.85);border:1px solid rgba(200,150,255,0.4);color:#fff;padding:8px 18px;border-radius:16px;font-size:0.82rem;pointer-events:none;display:none;backdrop-filter:blur(10px);text-align:center}
+#label b{color:#ffccff;display:block;font-size:1rem;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div id="title"><h1>✦ PLANET SPE ✦</h1><p>DRAG TO LOOK · ARROW/WASD KEYS TO MOVE · SCROLL TO ZOOM · HOVER CREATURES</p></div>
+<div id="info">
+  <div class="tag">🐦 Fwoopers</div>
+  <div class="tag">🐇 Mintari</div>
+  <div class="tag">🦚 Aureli</div>
+</div>
+<div id="label"><b id="lb-name"></b><span id="lb-desc"></span></div>
+<script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
+<script>
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xffb8e8);
+scene.fog=new THREE.Fog(0xffb8e8,40,120);
+
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.1,500);
+camera.position.set(0,4,18);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// Lights
+const sun=new THREE.DirectionalLight(0xffe0f0,1.6);
+sun.position.set(20,40,10);
+sun.castShadow=true;
+sun.shadow.mapSize.width=2048;sun.shadow.mapSize.height=2048;
+sun.shadow.camera.near=0.5;sun.shadow.camera.far=200;
+sun.shadow.camera.left=-60;sun.shadow.camera.right=60;
+sun.shadow.camera.top=60;sun.shadow.camera.bottom=-60;
+scene.add(sun);
+scene.add(new THREE.AmbientLight(0xffccff,0.7));
+scene.add(new THREE.HemisphereLight(0xffb8ff,0x88dd88,0.5));
+
+// Ground
+const ground=new THREE.Mesh(
+  new THREE.PlaneGeometry(200,200,40,40),
+  new THREE.MeshLambertMaterial({color:0x44cc55})
+);
+ground.rotation.x=-Math.PI/2;
+ground.receiveShadow=true;
+scene.add(ground);
+
+// Grass tufts
+for(let i=0;i<400;i++){
+  const g=new THREE.Group();
+  const x=(Math.random()-0.5)*80,z=(Math.random()-0.5)*80;
+  for(let j=0;j<5;j++){
+    const blade=new THREE.Mesh(
+      new THREE.ConeGeometry(0.05,0.4+Math.random()*0.3,4),
+      new THREE.MeshLambertMaterial({color:new THREE.Color().setHSL(0.33+Math.random()*0.05,0.8,0.35+Math.random()*0.1)})
+    );
+    blade.position.set((Math.random()-0.5)*0.3,0.2,(Math.random()-0.5)*0.3);
+    blade.rotation.z=(Math.random()-0.5)*0.3;
+    g.add(blade);
+  }
+  g.position.set(x,0,z);
+  scene.add(g);
+}
+
+// Flowers
+for(let i=0;i<150;i++){
+  const x=(Math.random()-0.5)*80,z=(Math.random()-0.5)*80;
+  const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.35,6),new THREE.MeshLambertMaterial({color:0x33aa33}));
+  stem.position.set(x,0.175,z);scene.add(stem);
+  const hue=Math.random();
+  const petal=new THREE.Mesh(new THREE.SphereGeometry(0.12,8,8),new THREE.MeshLambertMaterial({color:new THREE.Color().setHSL(hue,1,0.7)}));
+  petal.position.set(x,0.42,z);scene.add(petal);
+}
+
+// Tree builder
+function makeTree(x,z,scale=1){
+  const g=new THREE.Group();
+  g.position.set(x,0,z);
+  // Trunk
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.18*scale,0.25*scale,3*scale,8),new THREE.MeshLambertMaterial({color:0x8b5e3c}));
+  trunk.position.y=1.5*scale;trunk.castShadow=true;g.add(trunk);
+  // Branches + leaves
+  const leafColors=[0xff88bb,0xff66aa,0xee44aa,0xcc55cc,0xff99cc];
+  [[0,3*scale,0,1.8],[0.8*scale,2.5*scale,0,1.2],[-0.7*scale,2.6*scale,0,1.1],[0,2*scale,0.9*scale,1.0],[-0.5*scale,2.2*scale,-0.6*scale,0.9]].forEach(([lx,ly,lz,r])=>{
+    const leaf=new THREE.Mesh(new THREE.SphereGeometry(r*scale,12,12),new THREE.MeshLambertMaterial({color:leafColors[Math.floor(Math.random()*leafColors.length)]}));
+    leaf.position.set(lx,ly,lz);leaf.castShadow=true;g.add(leaf);
+  });
+  scene.add(g);
+  return g;
+}
+
+const trees=[];
+const treePositions=[];
+const treeConfigs=[
+  [-8,0,0,1],[-15,0,5,1.2],[-5,0,-10,0.9],[8,0,-8,1.1],[14,0,3,1.3],
+  [3,0,12,1],[20,0,-5,1],[0,0,-18,1.2],[-18,0,-8,1.1],[10,0,16,0.9],
+  [-10,0,14,1],[-22,0,4,1.2],[18,0,12,1],[-4,0,20,0.9],[6,0,-20,1.1]
+];
+treeConfigs.forEach(([x,,z,s])=>{trees.push(makeTree(x,z,s));treePositions.push({x,z,s});});
+
+// ─── FWOOPERS (FLYING VERSION) ─────────────────────────────────────────
+
+const fwooperColors = [0xff3333,0xff8800,0xffdd00,0x33cc33,0x3399ff,0xcc44ff,0xff44bb];
+const fwoopers = [];
+
+function makeFwooper(){
+
+  const color = fwooperColors[Math.floor(Math.random()*fwooperColors.length)];
+  const g = new THREE.Group();
+  const mat = c => new THREE.MeshLambertMaterial({color:c});
+
+  // Body
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.18,12,12), mat(color));
+  body.scale.set(1,1.2,1);
+  g.add(body);
+
+  // Head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.12,10,10), mat(color));
+  head.position.set(0,0.26,0.06);
+  g.add(head);
+
+  // Crest
+  for(let i=0;i<3;i++){
+    const crest = new THREE.Mesh(
+      new THREE.ConeGeometry(0.025,0.14,6),
+      mat(new THREE.Color(color).multiplyScalar(1.3))
+    );
+    crest.position.set((i-1)*0.06,0.4+i*0.02,0.06);
+    crest.rotation.z=(i-1)*0.25;
+    g.add(crest);
+  }
+
+  // Beak
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.03,0.1,6), mat(0xffcc44));
+  beak.position.set(0,0.24,0.19);
+  beak.rotation.x = Math.PI/2;
+  g.add(beak);
+
+  // Eyes (bigger + visible + glowy)
+[-0.07, 0.07].forEach(ex => {
+
+  // White part
+  const eyeWhite = new THREE.Mesh(
+    new THREE.SphereGeometry(0.045, 10, 10),
+    new THREE.MeshBasicMaterial({ color: 0xffffff }) // always bright
+  );
+  eyeWhite.position.set(ex, 0.3, 0.12);
+  g.add(eyeWhite);
+
+  // Pupil
+  const pupil = new THREE.Mesh(
+    new THREE.SphereGeometry(0.02, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0x000000 })
+  );
+  pupil.position.set(ex, 0.3, 0.16);
+  g.add(pupil);
+
+  // Glow sparkle ✨
+  const shine = new THREE.Mesh(
+    new THREE.SphereGeometry(0.012, 6, 6),
+    new THREE.MeshBasicMaterial({ color: 0x88ffff })
+  );
+  shine.position.set(ex + 0.01, 0.32, 0.18);
+  g.add(shine);
+
+});
+
+  // Wings
+  const wings = [];
+  [-1,1].forEach(side=>{
+    const wing = new THREE.Mesh(
+      new THREE.SphereGeometry(0.12,8,6),
+      mat(new THREE.Color(color).lerp(new THREE.Color(0xffffff),0.2))
+    );
+    wing.scale.set(0.4,0.25,0.8);
+    wing.position.set(side*0.18,0,0);
+    g.add(wing);
+    wings.push(wing);
+  });
+
+  // Tail
+  const tail = new THREE.Mesh(
+    new THREE.ConeGeometry(0.05,0.22,6),
+    mat(new THREE.Color(color).lerp(new THREE.Color(0x000000),0.1))
+  );
+  tail.position.set(0,-0.14,-0.16);
+  tail.rotation.x = -0.6;
+  g.add(tail);
+
+  // Spawn in sky
+  g.position.set(
+    (Math.random()-0.5)*50,
+    6 + Math.random()*5,
+    (Math.random()-0.5)*50
+  );
+
+  // Data
+  g.userData = {
+    type:'Fwooper',
+    name:'Fwooper',
+    desc:'A colorful flying songbird 🎵',
+    phase: Math.random()*Math.PI*2,
+    angle: Math.random()*Math.PI*2,
+    speed: 0.4 + Math.random()*0.2,
+    wings: wings
+  };
+
+  scene.add(g);
+  fwoopers.push(g);
+}
+
+// Create a bunch
+for(let i=0;i<12;i++) makeFwooper();
+// ─── MINTARI (mint bunnies) ────────────────────────────────────────────────
+const mintaris=[];
+function makeMintari(x,z){
+  const g=new THREE.Group();
+  const m=new THREE.MeshLambertMaterial({color:0x88ffcc});
+  // Body
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.22,12,12),m);
+  body.scale.set(1,1.1,1.3);body.position.y=0.22;g.add(body);
+  // Head
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.16,12,12),m);
+  head.position.set(0,0.54,0.16);g.add(head);
+  // Ears
+  [-0.08,0.08].forEach(ex=>{
+    const ear = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.04, 0.03, 0.3, 8),
+  m
+);
+    ear.position.set(ex,0.82,0.12);g.add(ear);
+    const inner=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.02,0.22,8),new THREE.MeshLambertMaterial({color:0xffbbdd}));
+    inner.position.set(ex,0.82,0.13);g.add(inner);
+  });
+  // Eyes
+  [-0.06,0.06].forEach(ex=>{
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(0.035,8,8),new THREE.MeshLambertMaterial({color:0x222244}));
+    eye.position.set(ex,0.58,0.3);g.add(eye);
+    const shine=new THREE.Mesh(new THREE.SphereGeometry(0.012,6,6),new THREE.MeshLambertMaterial({color:0xffffff}));
+    shine.position.set(ex+0.012,0.595,0.32);g.add(shine);
+  });
+  // Nose
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.025,6,6),new THREE.MeshLambertMaterial({color:0xffaacc}));
+  nose.position.set(0,0.54,0.32);g.add(nose);
+  // Tail
+  const tail=new THREE.Mesh(new THREE.SphereGeometry(0.1,10,10),new THREE.MeshLambertMaterial({color:0xbbffee}));
+  tail.position.set(0,0.3,-0.3);g.add(tail);
+  // Feet
+  [-0.12,0.12].forEach(fx=>{
+    const foot=new THREE.Mesh(new THREE.SphereGeometry(0.08,8,8),m);
+    foot.scale.set(1,0.5,1.6);foot.position.set(fx,0.07,0.12);g.add(foot);
+  });
+
+  g.position.set(x,0,z);
+  g.castShadow=true;
+  g.userData={type:'Mintari',name:'Mintari',desc:'A gentle mint-green bunny 🐇',
+    phase:Math.random()*Math.PI*2,tx:x,tz:z,speed:0.3+Math.random()*0.2,
+    angle:Math.random()*Math.PI*2,hopPhase:Math.random()*Math.PI*2};
+  scene.add(g);
+  mintaris.push(g);
+  return g;
+}
+for(let i=0;i<8;i++) makeMintari((Math.random()-0.5)*30,(Math.random()-0.5)*30);
+
+
+// ─── AURELI (peacocks) ────────────────────────────────────────────────────
+const aurelis=[];
+function makeAureli(x,z){
+  const g=new THREE.Group();
+  const bodyCol=0xff99bb,headCol=0xcc88ff,tailCols=[0xff88cc,0xcc66ff,0xffaaee,0xeeaaff,0xff77bb];
+  const bm=c=>new THREE.MeshLambertMaterial({color:c});
+  // Body
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.28,14,14),bm(bodyCol));
+  body.scale.set(1,0.9,1.4);body.position.y=0.3;g.add(body);
+  // Neck
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,0.3,8),bm(headCol));
+  neck.position.set(0,0.6,0.2);g.add(neck);
+  // Head
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.13,12,12),bm(headCol));
+  head.position.set(0,0.82,0.24);g.add(head);
+  // Crest
+  for(let i=0;i<5;i++){
+    const cr=new THREE.Mesh(new THREE.ConeGeometry(0.018,0.18,6),bm(tailCols[i]));
+    cr.position.set((i-2)*0.05,1.02,0.24);cr.rotation.z=(i-2)*0.2;g.add(cr);
+    const orb=new THREE.Mesh(new THREE.SphereGeometry(0.03,6,6),bm(tailCols[(i+2)%5]));
+    orb.position.set((i-2)*0.05,1.21,0.24);g.add(orb);
+  }
+  // Eyes
+  [-0.06,0.06].forEach(ex=>{
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,8),bm(0x111133));
+    eye.position.set(ex,0.86,0.34);g.add(eye);
+    const shine=new THREE.Mesh(new THREE.SphereGeometry(0.01,6,6),bm(0xffffff));
+    shine.position.set(ex+0.01,0.875,0.36);g.add(shine);
+  });
+  // Beak
+  const beak=new THREE.Mesh(new THREE.ConeGeometry(0.03,0.1,6),bm(0xffee88));
+  beak.position.set(0,0.82,0.38);beak.rotation.x=Math.PI/2;g.add(beak);
+  // Legs
+  [-0.1,0.1].forEach(lx=>{
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.02,0.32,6),bm(0xffbb88));
+    leg.position.set(lx,0.16,0);g.add(leg);
+  });
+  // FAN TAIL
+  const fanGroup=new THREE.Group();
+  fanGroup.position.set(0,0.4,-0.36);
+  for(let i=0;i<13;i++){
+    const angle=((i-6)/12)*(Math.PI*0.8);
+    const feather=new THREE.Mesh(new THREE.ConeGeometry(0.05,0.7,6),bm(tailCols[i%5]));
+    feather.position.set(Math.sin(angle)*0.15,Math.cos(angle)*0.15,0);
+    feather.rotation.z=angle;feather.rotation.y=0.2;
+    fanGroup.add(feather);
+    // Eye spot
+    const spot=new THREE.Mesh(new THREE.SphereGeometry(0.045,8,8),bm(tailCols[(i+2)%5]));
+    spot.position.set(Math.sin(angle)*0.55,Math.cos(angle)*0.55,0.02);
+    fanGroup.add(spot);
+  }
+  fanGroup.rotation.x=-0.3;
+  g.add(fanGroup);
+  g.userData.fanGroup=fanGroup;
+
+  g.position.set(x,0,z);
+  g.castShadow=true;
+  g.userData={type:'Aureli',name:'Aureli',desc:'A graceful peach-purple peacock 🦚',
+    phase:Math.random()*Math.PI*2,tx:x,tz:z,speed:0.15+Math.random()*0.1,
+    angle:Math.random()*Math.PI*2,fanGroup};
+  scene.add(g);
+  aurelis.push(g);
+  return g;
+}
+for(let i=0;i<5;i++) makeAureli((Math.random()-0.5)*25,(Math.random()-0.5)*25);
+
+// ─── INTERACTION ──────────────────────────────────────────────────────────
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+const allCreatures=[...fwoopers,...mintaris,...aurelis];
+const labelEl=document.getElementById('label');
+const lbName=document.getElementById('lb-name');
+const lbDesc=document.getElementById('lb-desc');
+
+let isDrag=false,prevM={x:0,y:0};
+let camAzimuth=0,camElevation=0.18,camDist=18;
+let tAz=0,tEl=0.18,tDist=18;
+
+renderer.domElement.addEventListener('mousedown',e=>{isDrag=true;prevM={x:e.clientX,y:e.clientY}});
+renderer.domElement.addEventListener('mouseup',()=>isDrag=false);
+renderer.domElement.addEventListener('mousemove',e=>{
+  if(isDrag){
+    tAz-=(e.clientX-prevM.x)*0.006;
+    tEl=Math.max(0.05,Math.min(1.0,tEl+(e.clientY-prevM.y)*0.005));
+    prevM={x:e.clientX,y:e.clientY};
+  }
+  mouse.x=(e.clientX/innerWidth)*2-1;
+  mouse.y=-(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(mouse,camera);
+  const hits=ray.intersectObjects(allCreatures.map(c=>{const ch=[];c.traverse(o=>{if(o.isMesh)ch.push(o)});return ch}).flat(),false);
+  if(hits.length>0){
+    let obj=hits[0].object;
+    while(obj.parent&&!obj.userData.name) obj=obj.parent;
+    if(obj.userData.name){
+      lbName.textContent=obj.userData.name;
+      lbDesc.textContent=obj.userData.desc;
+      labelEl.style.display='block';
+      renderer.domElement.style.cursor='pointer';
+    }
+  } else {
+    labelEl.style.display='none';
+    renderer.domElement.style.cursor='grab';
+  }
+});
+renderer.domElement.addEventListener('wheel', e => {
+  zoom += e.deltaY * 0.01;
+  zoom = Math.max(5, Math.min(25, zoom));
+});
+
+let lT=null;
+renderer.domElement.addEventListener('touchstart',e=>{lT=e.touches[0];isDrag=true},{passive:true});
+renderer.domElement.addEventListener('touchmove',e=>{
+  if(!lT)return;const t=e.touches[0];
+  tAz-=(t.clientX-lT.clientX)*0.006;
+  tEl=Math.max(0.05,Math.min(1.0,tEl+(t.clientY-lT.clientY)*0.005));
+  lT=t;
+},{passive:true});
+renderer.domElement.addEventListener('touchend',()=>{isDrag=false;lT=null});
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+// 🎮 PLAYER CONTROLS
+const keys = {
+  forward:false,
+  backward:false,
+  left:false,
+  right:false
+};
+
+ let player = {
+  x: 0,
+  z: 18,
+  speed: 0.4,
+  angle: 0   // 👈 NEW
+};
+
+let zoom = 10;
+  
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "ArrowUp" || e.key === "w") keys.forward = true;
+  if(e.key === "ArrowDown" || e.key === "s") keys.backward = true;
+  if(e.key === "ArrowLeft" || e.key === "a") keys.left = true;
+  if(e.key === "ArrowRight" || e.key === "d") keys.right = true;
+});
+
+document.addEventListener("keyup", (e)=>{
+  if(e.key === "ArrowUp" || e.key === "w") keys.forward = false;
+  if(e.key === "ArrowDown" || e.key === "s") keys.backward = false;
+  if(e.key === "ArrowLeft" || e.key === "a") keys.left = false;
+  if(e.key === "ArrowRight" || e.key === "d") keys.right = false;
+});
+  
+// ─── ANIMATE ──────────────────────────────────────────────────────────────
+let t=0;
+const BOUNDS=28;
+function wander(ud,dt){
+  ud.angle+=((Math.random()-0.5)*0.05);
+  ud.tx+=Math.cos(ud.angle)*ud.speed*dt;
+  ud.tz+=Math.sin(ud.angle)*ud.speed*dt;
+  if(ud.tx>BOUNDS)ud.tx=BOUNDS-0.1;if(ud.tx<-BOUNDS)ud.tx=-BOUNDS+0.1;
+  if(ud.tz>BOUNDS)ud.tz=BOUNDS-0.1;if(ud.tz<-BOUNDS)ud.tz=-BOUNDS+0.1;
+}
+
+let last=performance.now();
+function animate(){
+  const now=performance.now(),dt=Math.min((now-last)/1000,0.05);last=now;
+  t+=dt;
+
+ // Rotate
+if(keys.left) player.angle += 0.04;
+if(keys.right) player.angle -= 0.04;
+
+if(keys.forward){
+  player.x -= Math.sin(player.angle) * player.speed;
+  player.z -= Math.cos(player.angle) * player.speed;
+}
+if(keys.backward){
+  player.x += Math.sin(player.angle) * player.speed;
+  player.z += Math.cos(player.angle) * player.speed;
+}
+
+// keep inside bounds
+player.x = Math.max(-40, Math.min(40, player.x));
+player.z = Math.max(-40, Math.min(40, player.z));
+
+camera.position.x = player.x - Math.sin(player.angle) * zoom;
+camera.position.z = player.z - Math.cos(player.angle) * zoom;
+camera.position.y = zoom;
+
+camera.lookAt(player.x, 3, player.z);
+  
+  // ─── FWOOPER ANIMATION ─────────────────────────────────────────
+
+fwoopers.forEach(f=>{
+  const ud = f.userData;
+
+  // Move forward
+  ud.angle += 0.01;
+  f.position.x += Math.cos(ud.angle) * ud.speed * 0.05;
+  f.position.z += Math.sin(ud.angle) * ud.speed * 0.05;
+
+  // Float up/down
+  f.position.y += Math.sin(t*2 + ud.phase) * 0.03;
+
+  // Face direction
+  f.rotation.y = ud.angle;
+
+  // Wrap around world
+  const limit = 30;
+  if(f.position.x > limit) f.position.x = -limit;
+  if(f.position.x < -limit) f.position.x = limit;
+  if(f.position.z > limit) f.position.z = -limit;
+  if(f.position.z < -limit) f.position.z = limit;
+
+  // Wing flapping
+  ud.wings.forEach((wing,i)=>{
+    wing.rotation.z = Math.sin(t*6 + ud.phase) * (i===0 ? 0.5 : -0.5);
+  });
+});
+
+  // Mintari hop
+  mintaris.forEach(m=>{
+    wander(m.userData,dt);
+    m.position.x=m.userData.tx;m.position.z=m.userData.tz;
+    m.position.y=Math.max(0,Math.sin(t*4+m.userData.hopPhase)*0.15);
+    m.rotation.y=m.userData.angle+Math.PI;
+    // Ear wiggle
+    if(m.children[2])m.children[2].rotation.z=Math.sin(t*3+m.userData.phase)*0.15;
+    if(m.children[3])m.children[3].rotation.z=-Math.sin(t*3+m.userData.phase)*0.15;
+  });
+
+  // Aureli strut
+  aurelis.forEach(a=>{
+    wander(a.userData,dt);
+    a.position.x=a.userData.tx;a.position.z=a.userData.tz;
+    a.position.y=Math.abs(Math.sin(t*1.5+a.userData.phase))*0.06;
+    a.rotation.y=a.userData.angle+Math.PI;
+    if(a.userData.fanGroup) a.userData.fanGroup.rotation.x=-0.3+Math.sin(t*0.8+a.userData.phase)*0.1;
+  });
+
+  renderer.render(scene,camera);
+}
+renderer.setAnimationLoop(animate);
+</script>
+</body>
+</html>
