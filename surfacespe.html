@@ -452,12 +452,12 @@ if(keys.left) player.angle += 0.04;
 if(keys.right) player.angle -= 0.04;
 
 if(keys.forward){
-  player.x -= Math.sin(player.angle) * player.speed;
-  player.z -= Math.cos(player.angle) * player.speed;
-}
-if(keys.backward){
   player.x += Math.sin(player.angle) * player.speed;
   player.z += Math.cos(player.angle) * player.speed;
+}
+if(keys.backward){
+  player.x -= Math.sin(player.angle) * player.speed;
+  player.z -= Math.cos(player.angle) * player.speed;
 }
 
 // keep inside bounds
