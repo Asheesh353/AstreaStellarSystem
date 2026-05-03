@@ -1,621 +1,1170 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Planet Xeron-9 — Surface</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;overflow:hidden;font-family:'Segoe UI',sans-serif}
-canvas{display:block}
-#hud{position:fixed;top:0;left:0;width:100%;pointer-events:none;z-index:10}
-#title{position:fixed;top:18px;left:50%;transform:translateX(-50%);text-align:center}
-#title h1{font-size:1.8rem;background:linear-gradient(135deg,#66aaff,#aa66ff,#ff88ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:4px}
-#title p{color:rgba(255,255,255,0.4);font-size:0.72rem;margin-top:3px;letter-spacing:2px}
-#info{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:10px;pointer-events:all}
-.tag{background:rgba(0,0,0,0.5);border:1px solid rgba(150,150,255,0.3);color:rgba(255,255,255,0.8);padding:7px 16px;border-radius:20px;font-size:0.72rem;letter-spacing:1px;backdrop-filter:blur(10px)}
-#label{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-60px);background:rgba(5,10,25,0.85);border:1px solid rgba(150,150,255,0.4);color:#fff;padding:8px 18px;border-radius:16px;font-size:0.82rem;pointer-events:none;display:none;backdrop-filter:blur(10px);text-align:center;z-index:20;}
-#label b{color:#aaccff;display:block;font-size:1rem;margin-bottom:2px}
-#backbtn{position:fixed;top:20px;left:20px;background:rgba(0,0,0,0.5);border:1px solid rgba(150,150,255,0.3);color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:0.8rem;backdrop-filter:blur(10px);pointer-events:all;transition:all 0.3s;}
-#backbtn:hover{background:rgba(100,100,255,0.3);border-color:#aaccff;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Planet Xeron-9 — Surface</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif
+    }
+
+    canvas {
+      display: block
+    }
+
+    #hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+      z-index: 10
+    }
+
+    #title {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center
+    }
+
+    #title h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #66aaff, #aa66ff, #ff88ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 4px
+    }
+
+    #title p {
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.72rem;
+      margin-top: 3px;
+      letter-spacing: 2px
+    }
+
+    #info {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      pointer-events: all
+    }
+
+    .tag {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(150, 150, 255, 0.3);
+      color: rgba(255, 255, 255, 0.8);
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      backdrop-filter: blur(10px)
+    }
+
+    #label {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateY(-60px);
+      background: rgba(5, 10, 25, 0.85);
+      border: 1px solid rgba(150, 150, 255, 0.4);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 16px;
+      font-size: 0.82rem;
+      pointer-events: none;
+      display: none;
+      backdrop-filter: blur(10px);
+      text-align: center;
+      z-index: 20;
+    }
+
+    #label b {
+      color: #aaccff;
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 2px
+    }
+
+    #backbtn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(150, 150, 255, 0.3);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-size: 0.8rem;
+      backdrop-filter: blur(10px);
+      pointer-events: all;
+      transition: all 0.3s;
+    }
+
+    #backbtn:hover {
+      background: rgba(100, 100, 255, 0.3);
+      border-color: #aaccff;
+    }
+  </style>
 </head>
+
 <body>
-<a href="index.html" id="backbtn">⟵ SYSTEM EXPLORER</a>
-<div id="title"><h1>✦ XERON-9 SURFACE ✦</h1><p>WASD / ARROWS TO MOVE · DRAG TO LOOK · HOVER CREATURES</p></div>
-<div id="info">
-  <div class="tag">🪼 Medusae</div>
-  <div class="tag">🦌 Lumindoe</div>
-  <div class="tag">🐇 Lumibuns</div>
-</div>
-<div id="label"><b id="lb-name"></b><span id="lb-desc"></span></div>
-<script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
-<script>
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050a1a);
-scene.fog = new THREE.FogExp2(0x050a1a, 0.015);
+  <a href="index.html" id="backbtn">⟵ SYSTEM EXPLORER</a>
+  <div id="title">
+    <h1>✦ XERON-9 SURFACE ✦</h1>
+    <p>WASD / ARROWS TO MOVE · SPACE TO FEED (DOUBLE TAP FOR BLOBS) · DRAG TO LOOK · HOVER CREATURES</p>
+  </div>
+  <div id="info">
+    <div class="tag">🐉 Dracaena</div>
+    <div class="tag">🪼 Medusae</div>
+    <div class="tag">🦌 Lumindoe</div>
+    <div class="tag">🐇 Lumibuns</div>
+  </div>
+  <div id="label"><b id="lb-name"></b><span id="lb-desc"></span></div>
+  <script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
+  <script>
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x15254a);
+    scene.fog = new THREE.FogExp2(0x15254a, 0.015);
 
-const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.1, 500);
-camera.position.set(0, 10, 25);
+    const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 500);
+    camera.position.set(0, 10, 25);
 
-const renderer = new THREE.WebGLRenderer({antialias: true});
-renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.body.appendChild(renderer.domElement);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
 
-// Lights
-const moonLight = new THREE.DirectionalLight(0xaaeeff, 0.8);
-moonLight.position.set(-20, 30, -20);
-moonLight.castShadow = true;
-moonLight.shadow.mapSize.width = 2048; moonLight.shadow.mapSize.height = 2048;
-moonLight.shadow.camera.near = 0.5; moonLight.shadow.camera.far = 100;
-moonLight.shadow.camera.left = -50; moonLight.shadow.camera.right = 50;
-moonLight.shadow.camera.top = 50; moonLight.shadow.camera.bottom = -50;
-scene.add(moonLight);
+    // Lights
+    const moonLight = new THREE.DirectionalLight(0xaaeeff, 0.6);
+    moonLight.position.set(-20, 30, -20);
+    moonLight.castShadow = true;
+    moonLight.shadow.mapSize.width = 2048; moonLight.shadow.mapSize.height = 2048;
+    moonLight.shadow.camera.near = 0.5; moonLight.shadow.camera.far = 100;
+    moonLight.shadow.camera.left = -50; moonLight.shadow.camera.right = 50;
+    moonLight.shadow.camera.top = 50; moonLight.shadow.camera.bottom = -50;
+    scene.add(moonLight);
 
-scene.add(new THREE.AmbientLight(0x0a1033, 1.0)); // Dark blue ambient
-const waterLight = new THREE.HemisphereLight(0x050a1a, 0x112266, 0.6);
-scene.add(waterLight);
+    scene.add(new THREE.AmbientLight(0x1a2b55, 1.0)); // Lighter blue ambient
+    const waterLight = new THREE.HemisphereLight(0x15254a, 0x224488, 0.8);
+    scene.add(waterLight);
 
-// Sky & Moons
-const starGeo = new THREE.BufferGeometry();
-const sPos = new Float32Array(3000 * 3);
-for(let i=0; i<3000; i++){
-  const r = 200 + Math.random()*200;
-  const th = Math.random()*Math.PI*2;
-  const ph = Math.acos(2*Math.random()-1);
-  sPos[i*3] = r * Math.sin(ph) * Math.cos(th);
-  sPos[i*3+1] = Math.abs(r * Math.sin(ph) * Math.sin(th));
-  sPos[i*3+2] = r * Math.cos(ph);
-}
-starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
-const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xaaccff, size: 0.5, transparent: true, opacity: 0.8}));
-scene.add(stars);
-
-// Twin Moons
-const moon1 = new THREE.Mesh(new THREE.SphereGeometry(4, 32, 32), new THREE.MeshBasicMaterial({color: 0x88ccff}));
-moon1.position.set(-40, 30, -60);
-scene.add(moon1);
-const moonGlow1 = new THREE.Mesh(new THREE.SphereGeometry(4.5, 32, 32), new THREE.MeshBasicMaterial({color: 0x44aaff, transparent: true, opacity: 0.3}));
-moon1.add(moonGlow1);
-
-const moon2 = new THREE.Mesh(new THREE.SphereGeometry(2, 32, 32), new THREE.MeshBasicMaterial({color: 0xcc88ff}));
-moon2.position.set(-25, 20, -70);
-scene.add(moon2);
-const moonGlow2 = new THREE.Mesh(new THREE.SphereGeometry(2.4, 32, 32), new THREE.MeshBasicMaterial({color: 0xaa44ff, transparent: true, opacity: 0.3}));
-moon2.add(moonGlow2);
-
-// Ocean
-const oceanGeo = new THREE.PlaneGeometry(300, 300, 60, 60);
-const oceanMat = new THREE.MeshPhongMaterial({
-  color: 0x051a44, emissive: 0x020511, shininess: 80, specular: 0x88aaff, transparent: true, opacity: 0.85,
-  flatShading: true
-});
-const ocean = new THREE.Mesh(oceanGeo, oceanMat);
-ocean.rotation.x = -Math.PI/2;
-ocean.receiveShadow = true;
-scene.add(ocean);
-
-const oceanBase = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshBasicMaterial({color: 0x010515}));
-oceanBase.rotation.x = -Math.PI/2;
-oceanBase.position.y = -2;
-scene.add(oceanBase);
-
-const origOceanZ = Array.from(oceanGeo.attributes.position.array);
-
-// Islands
-const islands = [];
-function makeIsland(x, z, radius) {
-  const geo = new THREE.ConeGeometry(radius, radius*0.8, 16, 4, true);
-  // Modify vertices for irregularity
-  const pos = geo.attributes.position;
-  for(let i=0; i<pos.count; i++) {
-    if(pos.getY(i) < radius*0.4 && pos.getY(i) > -radius*0.1) {
-      pos.setX(i, pos.getX(i) + (Math.random()-0.5)*radius*0.3);
-      pos.setZ(i, pos.getZ(i) + (Math.random()-0.5)*radius*0.3);
+    // Sky & Moons
+    const starGeo = new THREE.BufferGeometry();
+    const sPos = new Float32Array(3000 * 3);
+    for (let i = 0; i < 3000; i++) {
+      const r = 200 + Math.random() * 200;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      sPos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+      sPos[i * 3 + 1] = Math.abs(r * Math.sin(ph) * Math.sin(th));
+      sPos[i * 3 + 2] = r * Math.cos(ph);
     }
-  }
-  geo.computeVertexNormals();
-  const mat = new THREE.MeshLambertMaterial({color: 0x111122});
-  const island = new THREE.Mesh(geo, mat);
-  island.position.set(x, -radius*0.2, z);
-  island.castShadow = true;
-  island.receiveShadow = true;
-  scene.add(island);
-  islands.push({x, z, r: radius});
-  
-  // Glowing Plants on island
-  for(let i=0; i<radius*2; i++){
-    const a = Math.random()*Math.PI*2;
-    const r2 = Math.random()*radius*0.7;
-    const px = x + Math.cos(a)*r2;
-    const pz = z + Math.sin(a)*r2;
-    const h = (1 - r2/radius) * (radius*0.8) - radius*0.6;
-    
-    const plantType = Math.random();
-    if(plantType < 0.5) {
-      // Mushroom
-      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.5), new THREE.MeshLambertMaterial({color: 0x223344}));
-      stem.position.set(px, h+0.25, pz);
-      scene.add(stem);
-      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshLambertMaterial({color: 0x88ffcc, emissive: 0x228866}));
-      cap.position.set(px, h+0.5, pz);
-      scene.add(cap);
-      const glow = new THREE.PointLight(0x88ffcc, 0.3, 2);
-      glow.position.set(px, h+0.6, pz);
-      scene.add(glow);
-    } else {
-      // Tube plant
-      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8), new THREE.MeshLambertMaterial({color: 0xcc44ff, emissive: 0x6611aa}));
-      tube.position.set(px, h+0.4, pz);
-      tube.rotation.x = (Math.random()-0.5)*0.5;
-      tube.rotation.z = (Math.random()-0.5)*0.5;
-      scene.add(tube);
-    }
-  }
-}
+    starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xaaccff, size: 0.5, transparent: true, opacity: 0.8 }));
+    scene.add(stars);
 
-makeIsland(0, 0, 15);
-makeIsland(-20, -15, 10);
-makeIsland(25, -5, 12);
-makeIsland(-10, 20, 8);
-makeIsland(15, 15, 9);
+    // Twin Moons
+    const moon1 = new THREE.Mesh(new THREE.SphereGeometry(4, 32, 32), new THREE.MeshBasicMaterial({ color: 0x88ccff }));
+    moon1.position.set(-40, 30, -60);
+    scene.add(moon1);
+    const moonGlow1 = new THREE.Mesh(new THREE.SphereGeometry(4.5, 32, 32), new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.3 }));
+    moon1.add(moonGlow1);
 
-// Animals
-const animals = [];
+    const moon2 = new THREE.Mesh(new THREE.SphereGeometry(2, 32, 32), new THREE.MeshBasicMaterial({ color: 0xcc88ff }));
+    moon2.position.set(-25, 20, -70);
+    scene.add(moon2);
+    const moonGlow2 = new THREE.Mesh(new THREE.SphereGeometry(2.4, 32, 32), new THREE.MeshBasicMaterial({ color: 0xaa44ff, transparent: true, opacity: 0.3 }));
+    moon2.add(moonGlow2);
 
-// 1. Jellyfish (Float)
-function makeJellyfish(x, z) {
-  const g = new THREE.Group();
-  
-  // Dome head
-  const headGeo = new THREE.SphereGeometry(0.6, 16, 16, 0, Math.PI*2, 0, Math.PI/2);
-  const headMat = new THREE.MeshLambertMaterial({color: 0xcc66ff, emissive: 0x5511aa, transparent: true, opacity: 0.7});
-  const head = new THREE.Mesh(headGeo, headMat);
-  g.add(head);
-  
-  // Inner glow
-  const inner = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({color: 0xffaaff}));
-  inner.position.y = 0.2;
-  g.add(inner);
-  
-  // Tentacles
-  const tentacles = [];
-  for(let i=0; i<6; i++){
-    const angle = (i/6) * Math.PI * 2;
-    const tenGeo = new THREE.CylinderGeometry(0.02, 0.01, 1.2, 4);
-    tenGeo.translate(0, -0.6, 0); // origin at top
-    const ten = new THREE.Mesh(tenGeo, new THREE.MeshLambertMaterial({color: 0xaa88ff, emissive: 0x331166}));
-    ten.position.set(Math.cos(angle)*0.4, 0, Math.sin(angle)*0.4);
-    g.add(ten);
-    tentacles.push({mesh: ten, phase: Math.random()*Math.PI*2});
-  }
-  
-  g.position.set(x, 2, z);
-  g.userData = {
-    type: 'Jelly', name: 'Medusae', desc: 'A floating translucent jellyfish. Gentle and cute. 🪼',
-    baseY: 2 + Math.random()*3, phase: Math.random()*Math.PI*2, speed: 0.01 + Math.random()*0.01,
-    tentacles, tx: x, tz: z, angle: Math.random()*Math.PI*2
-  };
-  
-  // Light
-  const light = new THREE.PointLight(0xcc66ff, 0.5, 4);
-  g.add(light);
-  
-  scene.add(g);
-  animals.push(g);
-}
+    // Ocean
+    const oceanGeo = new THREE.PlaneGeometry(300, 300, 60, 60);
+    const oceanMat = new THREE.MeshPhongMaterial({
+      color: 0x0a2a66, emissive: 0x040a1a, shininess: 30, specular: 0x335588, transparent: true, opacity: 0.85,
+      flatShading: true
+    });
+    const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+    ocean.rotation.x = -Math.PI / 2;
+    ocean.receiveShadow = true;
+    scene.add(ocean);
 
-for(let i=0; i<20; i++){
-  makeJellyfish((Math.random()-0.5)*80, (Math.random()-0.5)*80);
-}
+    const oceanBase = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshBasicMaterial({ color: 0x051025 }));
+    oceanBase.rotation.x = -Math.PI / 2;
+    oceanBase.position.y = -2;
+    scene.add(oceanBase);
 
-// 2. Lumindoe (Starry Glowing Deer)
-function makeStag() {
-  const g = new THREE.Group();
-  const bm = new THREE.MeshLambertMaterial({color: 0x07112c}); // Deep night blue
-  const antlerMat = new THREE.MeshLambertMaterial({color: 0xccffff, emissive: 0x33aacc, transparent: true, opacity: 0.9}); 
-  const ribbonMat = new THREE.MeshBasicMaterial({color: 0x88ccff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, side: THREE.DoubleSide});
-  
-  // Elegant Body
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.9, 8), bm);
-  body.rotation.z = Math.PI/2;
-  body.position.set(0, 1.3, 0);
-  g.add(body);
-  
-  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), bm);
-  chest.position.set(0.4, 1.3, 0);
-  g.add(chest);
+    const origOceanZ = Array.from(oceanGeo.attributes.position.array);
 
-  const rump = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), bm);
-  rump.position.set(-0.4, 1.3, 0);
-  g.add(rump);
-  
-  // Elegant Neck
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.18, 0.8), bm);
-  neck.position.set(0.6, 1.6, 0);
-  neck.rotation.z = -Math.PI/4;
-  g.add(neck);
-  
-  // Head
-  const head = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 8), bm);
-  head.position.set(0.8, 1.9, 0);
-  head.rotation.z = -Math.PI/2.2;
-  g.add(head);
-
-  // Ears
-  [-0.08, 0.08].forEach(zOff => {
-    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.25, 4), bm);
-    ear.position.set(0.7, 2.0, zOff*1.5);
-    ear.rotation.z = Math.PI/4;
-    ear.rotation.x = zOff > 0 ? Math.PI/5 : -Math.PI/5;
-    g.add(ear);
-  });
-  
-  // Complex Glowing Antlers
-  [-0.08, 0.08].forEach(zOff => {
-    const antlerGrp = new THREE.Group();
-    
-    const antler = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.03, 0.9), antlerMat);
-    antler.position.set(0, 0.45, 0);
-    antlerGrp.add(antler);
-    
-    const fork1 = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.02, 0.5), antlerMat);
-    fork1.position.set(0.15, 0.5, zOff > 0 ? 0.1 : -0.1);
-    fork1.rotation.z = Math.PI/4;
-    fork1.rotation.x = zOff > 0 ? Math.PI/6 : -Math.PI/6;
-    antlerGrp.add(fork1);
-
-    const fork2 = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.015, 0.4), antlerMat);
-    fork2.position.set(-0.1, 0.6, zOff > 0 ? 0.05 : -0.05);
-    fork2.rotation.z = -Math.PI/6;
-    fork2.rotation.x = zOff > 0 ? Math.PI/8 : -Math.PI/8;
-    antlerGrp.add(fork2);
-
-    const fork3 = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.012, 0.3), antlerMat);
-    fork3.position.set(0.2, 0.75, zOff > 0 ? 0.15 : -0.15);
-    fork3.rotation.z = Math.PI/3;
-    antlerGrp.add(fork3);
-    
-    antlerGrp.position.set(0.7, 2.0, zOff);
-    antlerGrp.rotation.z = Math.PI/8;
-    antlerGrp.rotation.x = zOff > 0 ? Math.PI/6 : -Math.PI/6;
-    g.add(antlerGrp);
-  });
-  
-  // Eyes
-  [-0.06, 0.06].forEach(zOff => {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.025), new THREE.MeshBasicMaterial({color: 0xffffff}));
-    eye.position.set(0.9, 1.95, zOff);
-    g.add(eye);
-  });
-  
-  // Slender Legs
-  const legs = [];
-  [[-0.35, -0.15], [-0.35, 0.15], [0.35, -0.15], [0.35, 0.15]].forEach(([xOff, zOff]) => {
-    const legGrp = new THREE.Group();
-    legGrp.position.set(xOff, 1.3, zOff);
-    
-    const legMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.015, 1.3), bm);
-    legMesh.position.set(0, -0.65, 0);
-    legGrp.add(legMesh);
-    
-    const hoof = new THREE.Mesh(new THREE.SphereGeometry(0.03), antlerMat);
-    hoof.position.set(0, -0.65, 0);
-    legMesh.add(hoof);
-    
-    g.add(legGrp);
-    legs.push({mesh: legGrp, xOff, zOff});
-  });
-
-  // Starry spots
-  const spotsGeo = new THREE.BufferGeometry();
-  const spotsPos = [];
-  for(let i=0; i<50; i++) {
-    spotsPos.push(
-      (Math.random()-0.5)*0.9,
-      1.1 + Math.random()*0.4,
-      (Math.random()-0.5)*0.35
-    );
-  }
-  spotsGeo.setAttribute('position', new THREE.Float32BufferAttribute(spotsPos, 3));
-  const spotsMat = new THREE.PointsMaterial({color: 0xddffff, size: 0.04, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending});
-  const spots = new THREE.Points(spotsGeo, spotsMat);
-  g.add(spots);
-
-  // Ethereal Ribbons
-  const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-0.7, 0.6, 0.5),
-    new THREE.Vector3(0, 1.9, 0.8),
-    new THREE.Vector3(0.9, 1.6, 0),
-    new THREE.Vector3(0, 0.9, -0.8),
-    new THREE.Vector3(-0.6, 0.6, -0.5)
-  ], true);
-  const ribbonGeo = new THREE.TubeGeometry(curve, 64, 0.03, 8, true);
-  const ribbon = new THREE.Mesh(ribbonGeo, ribbonMat);
-  g.add(ribbon);
-  
-  // Light
-  const light = new THREE.PointLight(0xaaffff, 0.8, 6);
-  light.position.set(0.6, 2.2, 0);
-  g.add(light);
-  
-  let island = islands[Math.floor(Math.random()*islands.length)];
-  g.position.set(island.x + (Math.random()-0.5)*island.r, 0, island.z + (Math.random()-0.5)*island.r);
-  
-  g.castShadow = true;
-  g.traverse(c=>{if(c.isMesh && c.material !== ribbonMat && c.material !== antlerMat && c.material !== spotsMat)c.castShadow=true});
-  
-  g.userData = {
-    type: 'Stag', name: 'Lumindoe', desc: 'A majestic starry deer with intricate glowing antlers and ethereal ribbons. 🦌',
-    legs, phase: Math.random()*Math.PI*2, speed: 0.015 + Math.random()*0.01, island, ribbon
-  };
-  
-  scene.add(g);
-  animals.push(g);
-}
-
-for(let i=0; i<6; i++) makeStag();
-
-// 3. Coral Bunny (Hop)
-function makeBunny() {
-  const g = new THREE.Group();
-  const m = new THREE.MeshLambertMaterial({color: 0xff66bb, emissive: 0x440022});
-  const gm = new THREE.MeshLambertMaterial({color: 0xffaadd, emissive: 0xcc2277});
-  
-  // Body
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), m);
-  body.scale.set(1.2, 0.9, 1);
-  body.position.y = 0.2;
-  g.add(body);
-  
-  // Head
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), m);
-  head.position.set(0.2, 0.4, 0);
-  g.add(head);
-  
-  // Ears (Glowing)
-  [-0.08, 0.08].forEach(zOff => {
-    const earGeo = THREE.CapsuleGeometry ? new THREE.CapsuleGeometry(0.04, 0.2, 4, 8) : new THREE.CylinderGeometry(0.04, 0.04, 0.2, 8);
-    const ear = new THREE.Mesh(earGeo, gm);
-    ear.position.set(0.15, 0.65, zOff);
-    ear.rotation.z = Math.PI/8;
-    g.add(ear);
-  });
-  
-  // Eyes
-  [-0.1, 0.1].forEach(zOff => {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04), new THREE.MeshBasicMaterial({color: 0x000000}));
-    eye.position.set(0.3, 0.45, zOff);
-    g.add(eye);
-    const shine = new THREE.Mesh(new THREE.SphereGeometry(0.015), new THREE.MeshBasicMaterial({color: 0xffffff}));
-    shine.position.set(0.32, 0.47, zOff + 0.01);
-    g.add(shine);
-  });
-  
-  // Tail (Glowing)
-  const tail = new THREE.Mesh(new THREE.SphereGeometry(0.08), gm);
-  tail.position.set(-0.25, 0.25, 0);
-  g.add(tail);
-  
-  const light = new THREE.PointLight(0xffaadd, 0.3, 2);
-  g.add(light);
-  
-  let island = islands[Math.floor(Math.random()*islands.length)];
-  g.position.set(island.x + (Math.random()-0.5)*island.r, 0, island.z + (Math.random()-0.5)*island.r);
-  
-  g.castShadow = true;
-  g.traverse(c=>{if(c.isMesh)c.castShadow=true});
-  
-  g.userData = {
-    type: 'Bunny', name: 'Lumibuns', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
-    phase: Math.random()*Math.PI*2, speed: 0.06 + Math.random()*0.02, island, origY: 0
-  };
-  
-  scene.add(g);
-  animals.push(g);
-}
-
-for(let i=0; i<10; i++) makeBunny();
-
-// Interaction
-const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
-const labelEl = document.getElementById('label');
-const lbName = document.getElementById('lb-name');
-const lbDesc = document.getElementById('lb-desc');
-
-let isDrag = false, prevM = {x:0, y:0};
-let tAz = 0, tEl = -0.05;
-let camAz = tAz, camEl = tEl;
-let camPos = new THREE.Vector3(0, 3.5, 25);
-let camTarget = new THREE.Vector3();
-
-let moveForward = false, moveBackward = false, turnLeft = false, turnRight = false;
-
-window.addEventListener('keydown', e => {
-  if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
-  if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
-  if(e.code === 'KeyA' || e.code === 'ArrowLeft') turnLeft = true;
-  if(e.code === 'KeyD' || e.code === 'ArrowRight') turnRight = true;
-});
-window.addEventListener('keyup', e => {
-  if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
-  if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
-  if(e.code === 'KeyA' || e.code === 'ArrowLeft') turnLeft = false;
-  if(e.code === 'KeyD' || e.code === 'ArrowRight') turnRight = false;
-});
-
-renderer.domElement.addEventListener('mousedown', e => {isDrag=true; prevM={x:e.clientX, y:e.clientY};});
-renderer.domElement.addEventListener('mouseup', () => isDrag=false);
-renderer.domElement.addEventListener('mousemove', e => {
-  if(isDrag){
-    tAz -= (e.clientX - prevM.x)*0.005;
-    tEl = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, tEl + (e.clientY - prevM.y)*0.005));
-    prevM = {x:e.clientX, y:e.clientY};
-  }
-  mouse.x = (e.clientX/innerWidth)*2 - 1;
-  mouse.y = -(e.clientY/innerHeight)*2 + 1;
-  
-  const hitObjects = [];
-  animals.forEach(a => a.traverse(c => {if(c.isMesh) hitObjects.push(c)}));
-  ray.setFromCamera(mouse, camera);
-  const hits = ray.intersectObjects(hitObjects, false);
-  
-  if(hits.length > 0){
-    let obj = hits[0].object;
-    while(obj.parent && !obj.userData.name) obj = obj.parent;
-    if(obj.userData.name){
-      lbName.textContent = obj.userData.name;
-      lbDesc.textContent = obj.userData.desc;
-      labelEl.style.display = 'block';
-      renderer.domElement.style.cursor = 'pointer';
-    }
-  } else {
-    labelEl.style.display = 'none';
-    renderer.domElement.style.cursor = 'grab';
-  }
-});
-renderer.domElement.addEventListener('wheel', e => {
-  camera.fov = Math.max(30, Math.min(100, camera.fov + e.deltaY * 0.05));
-  camera.updateProjectionMatrix();
-});
-
-window.addEventListener('resize', () => {
-  camera.aspect = innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
-
-// Animation Loop
-const clock = new THREE.Clock();
-function animate() {
-  const dt = clock.getDelta();
-  const time = clock.getElapsedTime();
-  
-  // Camera
-  if(turnLeft) tAz += dt * 1.5;
-  if(turnRight) tAz -= dt * 1.5;
-  
-  camAz += (tAz - camAz)*0.2;
-  camEl += (tEl - camEl)*0.2;
-  
-  const forwardX = Math.sin(camAz);
-  const forwardZ = Math.cos(camAz);
-  const moveSpeed = 15;
-  
-  if(moveForward) {
-    camPos.x -= forwardX * moveSpeed * dt;
-    camPos.z -= forwardZ * moveSpeed * dt;
-  }
-  if(moveBackward) {
-    camPos.x += forwardX * moveSpeed * dt;
-    camPos.z += forwardZ * moveSpeed * dt;
-  }
-  
-  // Constrain height
-  camPos.y = Math.max(2, Math.min(40, camPos.y));
-  
-  camera.position.copy(camPos);
-  
-  camTarget.x = camPos.x - Math.sin(camAz) * Math.cos(camEl);
-  camTarget.y = camPos.y + Math.sin(camEl);
-  camTarget.z = camPos.z - Math.cos(camAz) * Math.cos(camEl);
-  camera.lookAt(camTarget);
-  
-  // Ocean Waves
-  const pos = oceanGeo.attributes.position;
-  for(let i=0; i<pos.count; i++){
-    const x = origOceanZ[i*3];
-    const y = origOceanZ[i*3+1];
-    // Create tidal surge effect
-    const z = Math.sin(x*0.1 + time) * 0.5 + Math.sin(y*0.1 + time*1.2) * 0.5 + Math.sin((x+y)*0.05 + time*0.5) * 1.2;
-    pos.setZ(i, z);
-  }
-  pos.needsUpdate = true;
-  
-  // Animals
-  animals.forEach(a => {
-    const ud = a.userData;
-    ud.phase += dt * ud.speed * 50;
-    
-    if(ud.type === 'Jelly') {
-      // Float
-      ud.tx += Math.sin(ud.angle) * ud.speed;
-      ud.tz += Math.cos(ud.angle) * ud.speed;
-      a.position.x = ud.tx;
-      a.position.z = ud.tz;
-      a.position.y = ud.baseY + Math.sin(ud.phase*0.5) * 1.5;
-      
-      // Tentacles
-      ud.tentacles.forEach(t => {
-        t.mesh.rotation.x = Math.sin(ud.phase + t.phase) * 0.3;
-        t.mesh.rotation.z = Math.cos(ud.phase + t.phase) * 0.3;
-      });
-      
-      if(Math.random() < 0.01) ud.angle += (Math.random()-0.5);
-      
-    } else if (ud.type === 'Stag') {
-      // Canter (Move in circles around island)
-      ud.angle = ud.phase * 0.2;
-      const r = ud.island.r * 0.6;
-      const nx = ud.island.x + Math.sin(ud.angle) * r;
-      const nz = ud.island.z + Math.cos(ud.angle) * r;
-      
-      const dx = nx - a.position.x;
-      const dz = nz - a.position.z;
-      a.rotation.y = Math.atan2(dx, dz) - Math.PI/2;
-      
-      a.position.x = nx;
-      a.position.z = nz;
-      
-      // Bobbing
-      a.position.y = Math.abs(Math.sin(ud.phase * 2)) * 0.2;
-      
-      // Legs
-      ud.legs.forEach((l, i) => {
-        const offset = (i%2===0) ? 0 : Math.PI;
-        l.mesh.rotation.z = Math.sin(ud.phase * 2 + offset) * 0.5;
-      });
-      
-      // Ribbon
-      if(ud.ribbon) {
-        ud.ribbon.rotation.y = ud.phase * -0.5;
-        ud.ribbon.position.y = Math.sin(ud.phase * 3) * 0.1;
+    // Islands
+    const islands = [];
+    function makeIsland(x, z, radius) {
+      const geo = new THREE.ConeGeometry(radius, radius * 0.8, 16, 4, true);
+      // Modify vertices for irregularity
+      const pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        if (pos.getY(i) < radius * 0.4 && pos.getY(i) > -radius * 0.1) {
+          pos.setX(i, pos.getX(i) + (Math.random() - 0.5) * radius * 0.3);
+          pos.setZ(i, pos.getZ(i) + (Math.random() - 0.5) * radius * 0.3);
+        }
       }
-      
-    } else if (ud.type === 'Bunny') {
-      // Hop
-      ud.angle = ud.phase * 0.1;
-      const r = ud.island.r * 0.8;
-      
-      if(Math.random() < 0.02) {
-        ud.targetX = ud.island.x + (Math.random()-0.5)*r;
-        ud.targetZ = ud.island.z + (Math.random()-0.5)*r;
-      }
-      
-      if(ud.targetX !== undefined) {
-        const dx = ud.targetX - a.position.x;
-        const dz = ud.targetZ - a.position.z;
-        const dist = Math.sqrt(dx*dx + dz*dz);
-        if(dist > 0.1) {
-          a.position.x += (dx/dist) * ud.speed;
-          a.position.z += (dz/dist) * ud.speed;
-          a.rotation.y = Math.atan2(dx, dz) - Math.PI/2;
-          
-          a.position.y = Math.abs(Math.sin(ud.phase * 4)) * 0.5;
+      geo.computeVertexNormals();
+      const mat = new THREE.MeshLambertMaterial({ color: 0x111122 });
+      const island = new THREE.Mesh(geo, mat);
+      island.position.set(x, -radius * 0.2, z);
+      island.castShadow = true;
+      island.receiveShadow = true;
+      scene.add(island);
+      islands.push({ x, z, r: radius });
+
+      // Glowing Plants on island
+      for (let i = 0; i < radius * 2; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r2 = Math.random() * radius * 0.7;
+        const px = x + Math.cos(a) * r2;
+        const pz = z + Math.sin(a) * r2;
+        const h = (1 - r2 / radius) * (radius * 0.8) - radius * 0.6;
+
+        const plantType = Math.random();
+        if (plantType < 0.5) {
+          // Mushroom
+          const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.5), new THREE.MeshLambertMaterial({ color: 0x223344 }));
+          stem.position.set(px, h + 0.25, pz);
+          scene.add(stem);
+          const cap = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x88ffcc, emissive: 0x228866 }));
+          cap.position.set(px, h + 0.5, pz);
+          scene.add(cap);
+          const glow = new THREE.PointLight(0x88ffcc, 0.3, 2);
+          glow.position.set(px, h + 0.6, pz);
+          scene.add(glow);
         } else {
-          a.position.y = 0;
+          // Tube plant
+          const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8), new THREE.MeshLambertMaterial({ color: 0xcc44ff, emissive: 0x6611aa }));
+          tube.position.set(px, h + 0.4, pz);
+          tube.rotation.x = (Math.random() - 0.5) * 0.5;
+          tube.rotation.z = (Math.random() - 0.5) * 0.5;
+          scene.add(tube);
         }
       }
     }
-  });
-  
-  renderer.render(scene, camera);
-}
-renderer.setAnimationLoop(animate);
-</script>
-</body>
-</html>
 
+    makeIsland(0, 0, 15);
+    makeIsland(-20, -15, 10);
+    makeIsland(25, -5, 12);
+    makeIsland(-10, 20, 8);
+    makeIsland(15, 15, 9);
+
+    // Animals
+    const animals = [];
+
+    // 1. Jellyfish (Float)
+    function makeJellyfish(x, z) {
+      const g = new THREE.Group();
+
+      // Dome head
+      const headGeo = new THREE.SphereGeometry(0.6, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+      const headMat = new THREE.MeshLambertMaterial({ color: 0xcc66ff, emissive: 0x5511aa, transparent: true, opacity: 0.7 });
+      const head = new THREE.Mesh(headGeo, headMat);
+      g.add(head);
+
+      // Inner glow
+      const inner = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffaaff }));
+      inner.position.y = 0.2;
+      g.add(inner);
+
+      // Tentacles
+      const tentacles = [];
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const tenGeo = new THREE.CylinderGeometry(0.02, 0.01, 1.2, 4);
+        tenGeo.translate(0, -0.6, 0); // origin at top
+        const ten = new THREE.Mesh(tenGeo, new THREE.MeshLambertMaterial({ color: 0xaa88ff, emissive: 0x331166 }));
+        ten.position.set(Math.cos(angle) * 0.4, 0, Math.sin(angle) * 0.4);
+        g.add(ten);
+        tentacles.push({ mesh: ten, phase: Math.random() * Math.PI * 2 });
+      }
+
+      g.position.set(x, 2, z);
+      g.userData = {
+        type: 'Jelly', name: 'Medusae', desc: 'A floating translucent jellyfish. Gentle and cute. 🪼',
+        baseY: 2 + Math.random() * 3, phase: Math.random() * Math.PI * 2, speed: 0.01 + Math.random() * 0.01,
+        tentacles, tx: x, tz: z, angle: Math.random() * Math.PI * 2
+      };
+
+      // Light
+      const light = new THREE.PointLight(0xcc66ff, 0.5, 4);
+      g.add(light);
+
+      scene.add(g);
+      animals.push(g);
+    }
+
+    for (let i = 0; i < 20; i++) {
+      makeJellyfish((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80);
+    }
+
+    // 2. Lumindoe (Starry Glowing Deer)
+    function makeStag() {
+      const g = new THREE.Group();
+      const bm = new THREE.MeshLambertMaterial({ color: 0x07112c }); // Deep night blue
+      const antlerMat = new THREE.MeshLambertMaterial({ color: 0xccffff, emissive: 0x33aacc, transparent: true, opacity: 0.9 });
+      const ribbonMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+
+      // Elegant Body
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.9, 8), bm);
+      body.rotation.z = Math.PI / 2;
+      body.position.set(0, 1.3, 0);
+      g.add(body);
+
+      const chest = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), bm);
+      chest.position.set(0.4, 1.3, 0);
+      g.add(chest);
+
+      const rump = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), bm);
+      rump.position.set(-0.4, 1.3, 0);
+      g.add(rump);
+
+      // Elegant Neck
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.18, 0.8), bm);
+      neck.position.set(0.6, 1.6, 0);
+      neck.rotation.z = -Math.PI / 4;
+      g.add(neck);
+
+      // Head
+      const head = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 8), bm);
+      head.position.set(0.8, 1.9, 0);
+      head.rotation.z = -Math.PI / 2.2;
+      g.add(head);
+
+      // Ears
+      [-0.08, 0.08].forEach(zOff => {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.25, 4), bm);
+        ear.position.set(0.7, 2.0, zOff * 1.5);
+        ear.rotation.z = Math.PI / 4;
+        ear.rotation.x = zOff > 0 ? Math.PI / 5 : -Math.PI / 5;
+        g.add(ear);
+      });
+
+      // Complex Glowing Antlers
+      [-0.08, 0.08].forEach(zOff => {
+        const antlerGrp = new THREE.Group();
+
+        const antler = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.03, 0.9), antlerMat);
+        antler.position.set(0, 0.45, 0);
+        antlerGrp.add(antler);
+
+        const fork1 = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.02, 0.5), antlerMat);
+        fork1.position.set(0.15, 0.5, zOff > 0 ? 0.1 : -0.1);
+        fork1.rotation.z = Math.PI / 4;
+        fork1.rotation.x = zOff > 0 ? Math.PI / 6 : -Math.PI / 6;
+        antlerGrp.add(fork1);
+
+        const fork2 = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.015, 0.4), antlerMat);
+        fork2.position.set(-0.1, 0.6, zOff > 0 ? 0.05 : -0.05);
+        fork2.rotation.z = -Math.PI / 6;
+        fork2.rotation.x = zOff > 0 ? Math.PI / 8 : -Math.PI / 8;
+        antlerGrp.add(fork2);
+
+        const fork3 = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.012, 0.3), antlerMat);
+        fork3.position.set(0.2, 0.75, zOff > 0 ? 0.15 : -0.15);
+        fork3.rotation.z = Math.PI / 3;
+        antlerGrp.add(fork3);
+
+        antlerGrp.position.set(0.7, 2.0, zOff);
+        antlerGrp.rotation.z = Math.PI / 8;
+        antlerGrp.rotation.x = zOff > 0 ? Math.PI / 6 : -Math.PI / 6;
+        g.add(antlerGrp);
+      });
+
+      // Eyes
+      [-0.06, 0.06].forEach(zOff => {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.025), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+        eye.position.set(0.9, 1.95, zOff);
+        g.add(eye);
+      });
+
+      // Slender Legs
+      const legs = [];
+      [[-0.35, -0.15], [-0.35, 0.15], [0.35, -0.15], [0.35, 0.15]].forEach(([xOff, zOff]) => {
+        const legGrp = new THREE.Group();
+        legGrp.position.set(xOff, 1.3, zOff);
+
+        const legMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.015, 1.3), bm);
+        legMesh.position.set(0, -0.65, 0);
+        legGrp.add(legMesh);
+
+        const hoof = new THREE.Mesh(new THREE.SphereGeometry(0.03), antlerMat);
+        hoof.position.set(0, -0.65, 0);
+        legMesh.add(hoof);
+
+        g.add(legGrp);
+        legs.push({ mesh: legGrp, xOff, zOff });
+      });
+
+      // Starry spots
+      const spotsGeo = new THREE.BufferGeometry();
+      const spotsPos = [];
+      for (let i = 0; i < 50; i++) {
+        spotsPos.push(
+          (Math.random() - 0.5) * 0.9,
+          1.1 + Math.random() * 0.4,
+          (Math.random() - 0.5) * 0.35
+        );
+      }
+      spotsGeo.setAttribute('position', new THREE.Float32BufferAttribute(spotsPos, 3));
+      const spotsMat = new THREE.PointsMaterial({ color: 0xddffff, size: 0.04, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+      const spots = new THREE.Points(spotsGeo, spotsMat);
+      g.add(spots);
+
+      // Ethereal Ribbons
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.7, 0.6, 0.5),
+        new THREE.Vector3(0, 1.9, 0.8),
+        new THREE.Vector3(0.9, 1.6, 0),
+        new THREE.Vector3(0, 0.9, -0.8),
+        new THREE.Vector3(-0.6, 0.6, -0.5)
+      ], true);
+      const ribbonGeo = new THREE.TubeGeometry(curve, 64, 0.03, 8, true);
+      const ribbon = new THREE.Mesh(ribbonGeo, ribbonMat);
+      g.add(ribbon);
+
+      // Light
+      const light = new THREE.PointLight(0xaaffff, 0.8, 6);
+      light.position.set(0.6, 2.2, 0);
+      g.add(light);
+
+      let island = islands[Math.floor(Math.random() * islands.length)];
+      g.position.set(island.x + (Math.random() - 0.5) * island.r, 0, island.z + (Math.random() - 0.5) * island.r);
+
+      g.castShadow = true;
+      g.traverse(c => { if (c.isMesh && c.material !== ribbonMat && c.material !== antlerMat && c.material !== spotsMat) c.castShadow = true });
+
+      g.userData = {
+        type: 'Stag', name: 'Lumindoe', desc: 'A majestic starry deer with intricate glowing antlers and ethereal ribbons. 🦌',
+        legs, phase: Math.random() * Math.PI * 2, speed: 0.015 + Math.random() * 0.01, island, ribbon
+      };
+
+      scene.add(g);
+      animals.push(g);
+    }
+
+    for (let i = 0; i < 6; i++) makeStag();
+
+    // 3. Coral Bunny (Hop)
+    function makeBunny() {
+      const g = new THREE.Group();
+      const m = new THREE.MeshLambertMaterial({ color: 0xff66bb, emissive: 0x440022 });
+      const gm = new THREE.MeshLambertMaterial({ color: 0xffaadd, emissive: 0xcc2277 });
+
+      // Body
+      const body = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), m);
+      body.scale.set(1.2, 0.9, 1);
+      body.position.y = 0.2;
+      g.add(body);
+
+      // Head
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), m);
+      head.position.set(0.2, 0.4, 0);
+      g.add(head);
+
+      // Ears (Glowing)
+      [-0.08, 0.08].forEach(zOff => {
+        const earGeo = THREE.CapsuleGeometry ? new THREE.CapsuleGeometry(0.04, 0.2, 4, 8) : new THREE.CylinderGeometry(0.04, 0.04, 0.2, 8);
+        const ear = new THREE.Mesh(earGeo, gm);
+        ear.position.set(0.15, 0.65, zOff);
+        ear.rotation.z = Math.PI / 8;
+        g.add(ear);
+      });
+
+      // Eyes
+      [-0.1, 0.1].forEach(zOff => {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+        eye.position.set(0.3, 0.45, zOff);
+        g.add(eye);
+        const shine = new THREE.Mesh(new THREE.SphereGeometry(0.015), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+        shine.position.set(0.32, 0.47, zOff + 0.01);
+        g.add(shine);
+      });
+
+      // Tail (Glowing)
+      const tail = new THREE.Mesh(new THREE.SphereGeometry(0.08), gm);
+      tail.position.set(-0.25, 0.25, 0);
+      g.add(tail);
+
+      const light = new THREE.PointLight(0xffaadd, 0.3, 2);
+      g.add(light);
+
+      let island = islands[Math.floor(Math.random() * islands.length)];
+      g.position.set(island.x + (Math.random() - 0.5) * island.r, 0, island.z + (Math.random() - 0.5) * island.r);
+
+      g.castShadow = true;
+      g.traverse(c => { if (c.isMesh) c.castShadow = true });
+
+      g.userData = {
+        type: 'Bunny', name: 'Lumibuns', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
+        phase: Math.random() * Math.PI * 2, speed: 0.06 + Math.random() * 0.02, island, origY: 0
+      };
+
+      scene.add(g);
+      animals.push(g);
+    }
+    
+    // 4. Dracaena (Sea Serpent)
+    function makeSerpent() {
+      const g = new THREE.Group();
+      // Ethereal Translucent Material
+      const m = new THREE.MeshPhongMaterial({
+        color: 0xe0e0ff,
+        emissive: 0x442266,
+        transparent: true,
+        opacity: 0.6,
+        shininess: 100,
+        specular: 0xffffff
+      });
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0x88ffff }); // Glowing spots
+      const finMat = new THREE.MeshPhongMaterial({
+        color: 0x88ccff,
+        emissive: 0x2244aa,
+        transparent: true,
+        opacity: 0.4,
+        side: THREE.DoubleSide,
+        shininess: 200
+      });
+
+      const segments = [];
+      const wings = [];
+      const frills = [];
+      const numSegments = 16; // Longer and more majestic
+      const baseRadius = 1.2; // Larger scale
+
+      // Head (Elegant Triangular Face)
+      const headGrp = new THREE.Group();
+      const skull = new THREE.Mesh(new THREE.SphereGeometry(baseRadius * 0.8, 16, 16), m);
+      skull.scale.set(1.1, 0.9, 1);
+      headGrp.add(skull);
+
+      const snout = new THREE.Mesh(new THREE.ConeGeometry(baseRadius * 0.6, baseRadius * 2.2, 4), m);
+      snout.rotation.x = Math.PI / 2;
+      snout.position.z = baseRadius * 1.2;
+      snout.scale.set(0.8, 1, 0.3);
+      headGrp.add(snout);
+
+      const jaw = new THREE.Mesh(new THREE.ConeGeometry(baseRadius * 0.5, baseRadius * 1.8, 4), m);
+      jaw.rotation.x = Math.PI / 2;
+      jaw.position.set(0, -0.2 * baseRadius, baseRadius * 1.0);
+      jaw.scale.set(0.7, 1, 0.2);
+      headGrp.add(jaw);
+
+      // Eyes (Bright glowing cyan)
+      [-0.4 * baseRadius, 0.4 * baseRadius].forEach(xOff => {
+        const eyeGrp = new THREE.Group();
+        eyeGrp.position.set(xOff, 0.1 * baseRadius, 0.5 * baseRadius);
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.25 * baseRadius), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+        eyeGrp.add(eye);
+        const glow = new THREE.PointLight(0x00ffff, 0.5, 2);
+        eyeGrp.add(glow);
+        headGrp.add(eyeGrp);
+      });
+
+      // Long Horns
+      [-0.5, 0.5].forEach(xOff => {
+        const horn = new THREE.Mesh(new THREE.ConeGeometry(0.15 * baseRadius, 2.5 * baseRadius, 8), m);
+        horn.position.set(xOff * baseRadius, 0.6 * baseRadius, -0.2 * baseRadius);
+        horn.rotation.x = -Math.PI / 3;
+        horn.rotation.z = xOff > 0 ? -0.3 : 0.3;
+        headGrp.add(horn);
+      });
+
+      // Long Whiskers/Feelers
+      [-0.3, 0.3].forEach(xOff => {
+        const whisker = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.01, 4, 6), finMat);
+        whisker.position.set(xOff * baseRadius, -0.2 * baseRadius, 1.2 * baseRadius);
+        whisker.rotation.x = Math.PI / 2;
+        whisker.rotation.z = xOff > 0 ? -0.2 : 0.2;
+        headGrp.add(whisker);
+        frills.push(whisker);
+      });
+
+      // Head Frills
+      [-0.8, 0.8].forEach(xOff => {
+        const frill = new THREE.Mesh(new THREE.ConeGeometry(0.4 * baseRadius, 2 * baseRadius, 3), finMat);
+        frill.position.set(xOff * baseRadius, 0, 0);
+        frill.rotation.z = xOff > 0 ? -Math.PI / 2 : Math.PI / 2;
+        frill.rotation.x = -Math.PI / 4;
+        headGrp.add(frill);
+        frills.push(frill);
+      });
+
+      // Light
+      const light = new THREE.PointLight(0x88ffff, 2.0, 15);
+      headGrp.add(light);
+
+      g.add(headGrp);
+      segments.push({ mesh: headGrp, targetX: 0, targetZ: 60 });
+      headGrp.position.set(0, -5, 60);
+
+      // Body segments
+      for (let i = 1; i < numSegments; i++) {
+        const segGrp = new THREE.Group();
+        const radius = baseRadius * (1 - (i / numSegments) * 0.7); // Tapers off more elegantly
+        const seg = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), m);
+        seg.scale.set(1.1, 0.9, 1.3);
+        segGrp.add(seg);
+
+        // Wings on the front segments
+        if (i === 2 || i === 3) {
+          [-1, 1].forEach(side => {
+            const wingGeo = new THREE.ConeGeometry(radius * 0.5, radius * 6, 3);
+            const wing = new THREE.Mesh(wingGeo, finMat);
+            wing.position.set(side * radius, 0, 0);
+            wing.rotation.z = side > 0 ? -Math.PI / 2.2 : Math.PI / 2.2;
+            wing.rotation.y = side > 0 ? 0.5 : -0.5;
+            segGrp.add(wing);
+            wings.push({ mesh: wing, side });
+          });
+        }
+
+        // Dorsal fin ridge
+        const dorsal = new THREE.Mesh(new THREE.ConeGeometry(radius * 0.4, radius * 1.2, 3), finMat);
+        dorsal.position.set(0, radius, 0);
+        segGrp.add(dorsal);
+
+        // Glowing spot
+        const spot = new THREE.Mesh(new THREE.SphereGeometry(radius * 0.25, 8, 8), glowMat);
+        spot.position.set(0, radius * 0.8, 0);
+        segGrp.add(spot);
+
+        segGrp.position.set(0, -5, 60 - i * 1.8);
+        g.add(segGrp);
+        segments.push({ mesh: segGrp, targetX: 0, targetZ: 60 - i * 1.8 });
+      }
+
+      g.userData = {
+        type: 'Serpent', name: 'Dracaena', desc: 'An elegant, ethereal sea dragon that glides through the bioluminescent deep. 🐉',
+        segments, wings, frills, phase: 0, speed: 0.08, angle: 0, baseY: -5,
+        tx: 0, tz: 60, isBreaching: false, breachTimer: 0
+      };
+
+      g.traverse(c => { if (c.isMesh) c.castShadow = true });
+      scene.add(g);
+      animals.push(g);
+    }
+
+    for (let i = 0; i < 10; i++) makeBunny();
+    makeSerpent();
+
+    // Interaction
+    const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+    const labelEl = document.getElementById('label');
+    const lbName = document.getElementById('lb-name');
+    const lbDesc = document.getElementById('lb-desc');
+
+    let isDrag = false, prevM = { x: 0, y: 0 };
+    let tAz = 0, tEl = -0.05;
+    let camAz = tAz, camEl = tEl;
+    let camPos = new THREE.Vector3(0, 3.5, 25);
+    let camTarget = new THREE.Vector3();
+
+    let moveForward = false, moveBackward = false, turnLeft = false, turnRight = false;
+
+    let spaceCount = 0;
+    let lastSpaceTime = 0;
+    let spaceTimeout = null;
+    window.addEventListener('keydown', e => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') turnLeft = true;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') turnRight = true;
+      if (e.code === "Space") {
+        const now = Date.now();
+        if (now - lastSpaceTime < 400) {
+          spaceCount++;
+        } else {
+          spaceCount = 1;
+        }
+        lastSpaceTime = now;
+
+        if (spaceTimeout) clearTimeout(spaceTimeout);
+
+        spaceTimeout = setTimeout(() => {
+          if (spaceCount === 1) {
+            // SINGLE TAP - Grass
+            if (grasses.filter(b => b.active).length < 8) {
+              const bGroup = new THREE.Group();
+              for (let i = 0; i < 3; i++) {
+                const blade = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.4, 4), new THREE.MeshBasicMaterial({ color: 0x88ffaa }));
+                blade.position.set((Math.random() - 0.5) * 0.2, 0.2, (Math.random() - 0.5) * 0.2);
+                blade.rotation.x = (Math.random() - 0.5) * 0.4;
+                blade.rotation.z = (Math.random() - 0.5) * 0.4;
+                bGroup.add(blade);
+              }
+              bGroup.position.set(camPos.x, 0.8, camPos.z);
+              scene.add(bGroup);
+              grasses.push({ mesh: bGroup, x: camPos.x, y: 0.8, z: camPos.z, active: true });
+            }
+          } else if (spaceCount === 2) {
+            // DOUBLE TAP - Blobs
+            if (blobs.filter(b => b.active).length < 15) {
+              for (let i = 0; i < 4; i++) {
+                const s = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), new THREE.MeshBasicMaterial({ color: 0x88ffff }));
+                s.position.set(camPos.x + (Math.random() - 0.5) * 2.5, 1.5, camPos.z + (Math.random() - 0.5) * 2.5);
+                scene.add(s);
+                blobs.push({ mesh: s, x: s.position.x, z: s.position.z, active: true });
+              }
+            }
+          } else if (spaceCount >= 3) {
+            // TRIPLE TAP - Star Fruit
+            if (starFruits.filter(f => f.active).length < 10) {
+              for (let i = 0; i < 3; i++) {
+                const fGroup = new THREE.Group();
+                const starMat = new THREE.MeshBasicMaterial({ color: 0xffdd44 });
+                for (let j = 0; j < 2; j++) {
+                  const cone = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.6, 4), starMat);
+                  cone.rotation.x = j * Math.PI;
+                  fGroup.add(cone);
+                }
+                fGroup.position.set(camPos.x + (Math.random() - 0.5) * 2, 1.2, camPos.z + (Math.random() - 0.5) * 2);
+                scene.add(fGroup);
+                starFruits.push({ mesh: fGroup, x: fGroup.position.x, z: fGroup.position.z, active: true });
+                const fLight = new THREE.PointLight(0xffdd44, 0.5, 3);
+                fGroup.add(fLight);
+              }
+            }
+          }
+          spaceCount = 0;
+          spaceTimeout = null;
+        }, 300);
+      }
+    });
+    window.addEventListener('keyup', e => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') turnLeft = false;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') turnRight = false;
+    });
+
+    renderer.domElement.addEventListener('mousedown', e => { isDrag = true; prevM = { x: e.clientX, y: e.clientY }; });
+    renderer.domElement.addEventListener('mouseup', () => isDrag = false);
+    renderer.domElement.addEventListener('mousemove', e => {
+      if (isDrag) {
+        tAz -= (e.clientX - prevM.x) * 0.005;
+        tEl = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, tEl + (e.clientY - prevM.y) * 0.005));
+        prevM = { x: e.clientX, y: e.clientY };
+      }
+      mouse.x = (e.clientX / innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+
+      const hitObjects = [];
+      animals.forEach(a => a.traverse(c => { if (c.isMesh) hitObjects.push(c) }));
+      ray.setFromCamera(mouse, camera);
+      const hits = ray.intersectObjects(hitObjects, false);
+
+      if (hits.length > 0) {
+        let obj = hits[0].object;
+        while (obj.parent && !obj.userData.name) obj = obj.parent;
+        if (obj.userData.name) {
+          lbName.textContent = obj.userData.name;
+          lbDesc.textContent = obj.userData.desc;
+          labelEl.style.display = 'block';
+          renderer.domElement.style.cursor = 'pointer';
+        }
+      } else {
+        labelEl.style.display = 'none';
+        renderer.domElement.style.cursor = 'grab';
+      }
+    });
+    renderer.domElement.addEventListener('wheel', e => {
+      camera.fov = Math.max(30, Math.min(100, camera.fov + e.deltaY * 0.05));
+      camera.updateProjectionMatrix();
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    const grasses = [];
+    const blobs = [];
+    const hearts = [];
+    const starFruits = [];
+
+    function createHeartTexture() {
+      const c = document.createElement('canvas');
+      c.width = 64; c.height = 64;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ff3366';
+      ctx.font = '48px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('❤', 32, 35);
+      return new THREE.CanvasTexture(c);
+    }
+    const heartMat = new THREE.SpriteMaterial({ map: createHeartTexture(), color: 0xffffff });
+
+    function spawnHeart(x, y, z) {
+      const h = new THREE.Sprite(heartMat);
+      h.position.set(x, y, z);
+      h.scale.set(1.5, 1.5, 1.5);
+      scene.add(h);
+      hearts.push({ mesh: h, time: 0 });
+    }
+
+    // Animation Loop
+    const clock = new THREE.Clock();
+    function animate() {
+      const dt = clock.getDelta();
+      const time = clock.getElapsedTime();
+
+      // Camera
+      if (turnLeft) tAz += dt * 1.5;
+      if (turnRight) tAz -= dt * 1.5;
+
+      camAz += (tAz - camAz) * 0.2;
+      camEl += (tEl - camEl) * 0.2;
+
+      const forwardX = Math.sin(camAz);
+      const forwardZ = Math.cos(camAz);
+      const moveSpeed = 15;
+
+      if (moveForward) {
+        camPos.x -= forwardX * moveSpeed * dt;
+        camPos.z -= forwardZ * moveSpeed * dt;
+      }
+      if (moveBackward) {
+        camPos.x += forwardX * moveSpeed * dt;
+        camPos.z += forwardZ * moveSpeed * dt;
+      }
+
+      // Constrain height
+      camPos.y = Math.max(2, Math.min(40, camPos.y));
+
+      camera.position.copy(camPos);
+
+      camTarget.x = camPos.x - Math.sin(camAz) * Math.cos(camEl);
+      camTarget.y = camPos.y + Math.sin(camEl);
+      camTarget.z = camPos.z - Math.cos(camAz) * Math.cos(camEl);
+      camera.lookAt(camTarget);
+
+      // Ocean Waves
+      const pos = oceanGeo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = origOceanZ[i * 3];
+        const y = origOceanZ[i * 3 + 1];
+        // Create tidal surge effect
+        const z = Math.sin(x * 0.1 + time) * 0.5 + Math.sin(y * 0.1 + time * 1.2) * 0.5 + Math.sin((x + y) * 0.05 + time * 0.5) * 1.2;
+        pos.setZ(i, z);
+      }
+      pos.needsUpdate = true;
+
+      for (let i = hearts.length - 1; i >= 0; i--) {
+        const h = hearts[i];
+        h.time += dt;
+        h.mesh.position.y += dt * 1.5;
+        h.mesh.material.opacity = 1 - (h.time / 2);
+        if (h.time > 2) { scene.remove(h.mesh); hearts.splice(i, 1); }
+      }
+      for (let i = grasses.length - 1; i >= 0; i--) if (!grasses[i].active) grasses.splice(i, 1);
+      for (let i = blobs.length - 1; i >= 0; i--) if (!blobs[i].active) blobs.splice(i, 1);
+
+      // Animals
+      animals.forEach(a => {
+        const ud = a.userData;
+        ud.phase += dt * ud.speed * 50;
+
+        if (ud.type === 'Jelly') {
+          let closestBlob = null, minBlobDist = 20;
+          for (let b of blobs) {
+            if (!b.active) continue;
+            const d = Math.hypot(b.x - a.position.x, b.z - a.position.z);
+            if (d < minBlobDist) { minBlobDist = d; closestBlob = b; }
+          }
+
+          if (closestBlob) {
+            const dx = closestBlob.x - a.position.x;
+            const dz = closestBlob.z - a.position.z;
+            const angle = Math.atan2(dx, dz);
+            ud.angle = angle;
+            if (minBlobDist > 0.4) {
+              ud.tx += Math.sin(angle) * ud.speed * 3.0;
+              ud.tz += Math.cos(angle) * ud.speed * 3.0;
+              ud.baseY += (1.5 - ud.baseY) * 0.05;
+              ud.isEating = false;
+            } else {
+              ud.isEating = true;
+              if (!ud.eatTimer) ud.eatTimer = 0;
+              ud.eatTimer += dt;
+              ud.baseY += (1.5 - ud.baseY) * 0.1;
+              if (ud.eatTimer > 1.2) {
+                closestBlob.active = false;
+                scene.remove(closestBlob.mesh);
+                spawnHeart(a.position.x, 2.0, a.position.z);
+                ud.eatTimer = 0;
+                ud.isEating = false;
+                ud.baseY = 2 + Math.random() * 3;
+              }
+            }
+          } else {
+            ud.isEating = false;
+            ud.tx += Math.sin(ud.angle) * ud.speed;
+            ud.tz += Math.cos(ud.angle) * ud.speed;
+            if (Math.random() < 0.01) ud.angle += (Math.random() - 0.5);
+          }
+
+          a.position.x = ud.tx;
+          a.position.z = ud.tz;
+          a.position.y = ud.baseY + Math.sin(ud.phase * 0.5) * (ud.isEating ? 0.3 : 1.5);
+
+          ud.tentacles.forEach(t => {
+            t.mesh.rotation.x = Math.sin(ud.phase + t.phase) * (ud.isEating ? 0.6 : 0.3);
+            t.mesh.rotation.z = Math.cos(ud.phase + t.phase) * (ud.isEating ? 0.6 : 0.3);
+          });
+
+        } else if (ud.type === 'Stag' || ud.type === 'Bunny') {
+          let closestGrass = null, minGrassDist = 20;
+          for (let g of grasses) {
+            if (!g.active) continue;
+            const d = Math.hypot(g.x - a.position.x, g.z - a.position.z);
+            if (d < minGrassDist) { minGrassDist = d; closestGrass = g; }
+          }
+
+          if (ud.type === 'Stag') {
+            if (closestGrass) {
+              const dx = closestGrass.x - a.position.x;
+              const dz = closestGrass.z - a.position.z;
+              const angle = Math.atan2(dx, dz);
+              if (minGrassDist > 0.4) {
+                a.position.x += Math.sin(angle) * 4.0 * dt;
+                a.position.z += Math.cos(angle) * 4.0 * dt;
+                a.rotation.y = angle - Math.PI / 2;
+                ud.isEating = false;
+                a.position.y = Math.abs(Math.sin(ud.phase * 2)) * 0.2;
+              } else {
+                ud.isEating = true;
+                if (!ud.eatTimer) ud.eatTimer = 0;
+                ud.eatTimer += dt;
+                a.position.y = closestGrass.y - 0.2;
+                a.rotation.z = Math.sin(ud.phase * 10) * 0.1;
+                if (ud.eatTimer > 1.2) {
+                  closestGrass.active = false;
+                  scene.remove(closestGrass.mesh);
+                  spawnHeart(a.position.x, 1.5, a.position.z);
+                  ud.eatTimer = 0;
+                  ud.isEating = false;
+                  a.rotation.z = 0;
+                }
+              }
+              ud.angle = Math.atan2(a.position.x - ud.island.x, a.position.z - ud.island.z);
+              ud.phase = ud.angle / 0.2;
+            } else {
+              ud.isEating = false;
+              a.rotation.z = 0;
+              ud.angle = ud.phase * 0.2;
+              const r = ud.island.r * 0.6;
+              const nx = ud.island.x + Math.sin(ud.angle) * r;
+              const nz = ud.island.z + Math.cos(ud.angle) * r;
+
+              const dx = nx - a.position.x;
+              const dz = nz - a.position.z;
+              a.rotation.y = Math.atan2(dx, dz) - Math.PI / 2;
+
+              a.position.x = nx;
+              a.position.z = nz;
+              a.position.y = Math.abs(Math.sin(ud.phase * 2)) * 0.2;
+            }
+
+            ud.legs.forEach((l, i) => {
+              const offset = (i % 2 === 0) ? 0 : Math.PI;
+              l.mesh.rotation.z = ud.isEating ? 0 : Math.sin(ud.phase * 2 + offset) * 0.5;
+            });
+
+            if (ud.ribbon) {
+              ud.ribbon.rotation.y = ud.phase * -0.5;
+              ud.ribbon.position.y = ud.isEating ? 0 : Math.sin(ud.phase * 3) * 0.1;
+            }
+
+          } else if (ud.type === 'Bunny') {
+            if (closestGrass) {
+              const dx = closestGrass.x - a.position.x;
+              const dz = closestGrass.z - a.position.z;
+              const angle = Math.atan2(dx, dz);
+              if (minGrassDist > 0.4) {
+                a.position.x += Math.sin(angle) * ud.speed;
+                a.position.z += Math.cos(angle) * ud.speed;
+                a.rotation.y = angle - Math.PI / 2;
+                ud.isEating = false;
+                a.position.y = Math.abs(Math.sin(ud.phase * 4)) * 0.5;
+              } else {
+                ud.isEating = true;
+                if (!ud.eatTimer) ud.eatTimer = 0;
+                ud.eatTimer += dt;
+                a.position.y = closestGrass.y - 0.2;
+                a.rotation.x = Math.sin(ud.phase * 15) * 0.1; // nibble
+                if (ud.eatTimer > 1.2) {
+                  closestGrass.active = false;
+                  scene.remove(closestGrass.mesh);
+                  spawnHeart(a.position.x, 0.8, a.position.z);
+                  ud.eatTimer = 0;
+                  ud.isEating = false;
+                  a.rotation.x = 0;
+                }
+              }
+              ud.targetX = undefined;
+            } else {
+              ud.isEating = false;
+              a.rotation.x = 0;
+              ud.angle = ud.phase * 0.1;
+              const r = ud.island.r * 0.8;
+
+              if (Math.random() < 0.02) {
+                ud.targetX = ud.island.x + (Math.random() - 0.5) * r;
+                ud.targetZ = ud.island.z + (Math.random() - 0.5) * r;
+              }
+
+              if (ud.targetX !== undefined) {
+                const dx = ud.targetX - a.position.x;
+                const dz = ud.targetZ - a.position.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+                if (dist > 0.1) {
+                  a.position.x += (dx / dist) * ud.speed;
+                  a.position.z += (dz / dist) * ud.speed;
+                  a.rotation.y = Math.atan2(dx, dz) - Math.PI / 2;
+                  a.position.y = Math.abs(Math.sin(ud.phase * 4)) * 0.5;
+                } else {
+                  a.position.y = 0;
+                }
+              }
+            }
+          }
+        } else if (ud.type === 'Serpent') {
+          // Food search
+          let closestStar = null, minStarDist = 40;
+          for (let f of starFruits) {
+            if (!f.active) continue;
+            const d = Math.hypot(f.x - ud.segments[0].mesh.position.x, f.z - ud.segments[0].mesh.position.z);
+            if (d < minStarDist) { minStarDist = d; closestStar = f; }
+          }
+
+          if (closestStar) {
+            const fdx = closestStar.x - ud.segments[0].mesh.position.x;
+            const fdz = closestStar.z - ud.segments[0].mesh.position.z;
+            const fAngle = Math.atan2(fdx, fdz);
+            ud.tx = closestStar.x;
+            ud.tz = closestStar.z;
+            ud.isBreaching = true; // Stay on surface to eat
+            ud.baseY += (1.5 - ud.baseY) * 0.1;
+          } else {
+            ud.angle += dt * 0.15;
+            const r = 60; // Wide circle
+            ud.tx = Math.sin(ud.angle) * r;
+            ud.tz = Math.cos(ud.angle) * r;
+
+            ud.breachTimer += dt;
+            if (ud.breachTimer > 20) { // Every 20 seconds, breach
+              ud.isBreaching = !ud.isBreaching;
+              ud.breachTimer = 0;
+            }
+            const targetBaseY = ud.isBreaching ? 1.5 : -5;
+            ud.baseY += (targetBaseY - ud.baseY) * 0.02;
+          }
+
+          // Update head
+          const headSeg = ud.segments[0];
+          const hdx = ud.tx - headSeg.mesh.position.x;
+          const hdz = ud.tz - headSeg.mesh.position.z;
+          const distToTarget = Math.sqrt(hdx * hdx + hdz * hdz);
+
+          if (distToTarget > 0.1) {
+            const moveSpd = closestStar ? 15 : 5;
+            headSeg.mesh.position.x += (hdx / distToTarget) * moveSpd * dt;
+            headSeg.mesh.position.z += (hdz / distToTarget) * moveSpd * dt;
+            headSeg.mesh.rotation.y = Math.atan2(hdx, hdz);
+          }
+
+          headSeg.mesh.position.y = ud.baseY + Math.sin(ud.phase * 0.5) * 1.5;
+
+          // Consumption check
+          if (closestStar && distToTarget < 2.5) {
+            closestStar.active = false;
+            scene.remove(closestStar.mesh);
+            spawnHeart(headSeg.mesh.position.x, headSeg.mesh.position.y + 1, headSeg.mesh.position.z);
+            ud.barrelRoll = Math.PI * 2;
+          }
+
+          // Barrel Roll
+          if (ud.barrelRoll === undefined) ud.barrelRoll = 0;
+          if (ud.barrelRoll > 0) {
+            ud.barrelRoll -= dt * 10;
+            headSeg.mesh.rotation.z = ud.barrelRoll;
+          } else {
+            headSeg.mesh.rotation.z = 0;
+          }
+
+          // Animate Frills/Whiskers
+          if (ud.frills) {
+            ud.frills.forEach((f, idx) => {
+              f.rotation.z += Math.sin(ud.phase * 0.3 + idx) * 0.01;
+              f.rotation.x += Math.cos(ud.phase * 0.2 + idx) * 0.01;
+            });
+          }
+
+          // Update body segments to follow the one ahead of them
+          for (let i = 1; i < ud.segments.length; i++) {
+            const seg = ud.segments[i];
+            const prevSeg = ud.segments[i - 1];
+
+            const idealDist = 1.8; // Match the new larger scale
+            const pdx = prevSeg.mesh.position.x - seg.mesh.position.x;
+            const pdz = prevSeg.mesh.position.z - seg.mesh.position.z;
+            const dist = Math.sqrt(pdx * pdx + pdz * pdz);
+
+            if (dist > idealDist) {
+              seg.mesh.position.x += (pdx / dist) * (dist - idealDist) * 0.2;
+              seg.mesh.position.z += (pdz / dist) * (dist - idealDist) * 0.2;
+            }
+            seg.mesh.rotation.y = Math.atan2(pdx, pdz);
+
+            // Undulate with a slight phase offset based on index
+            seg.mesh.position.y = ud.baseY + Math.sin(ud.phase * 0.5 - i * 0.3) * 1.5;
+
+            // Follow head's roll with delay
+            if (ud.barrelRoll > 0) {
+              seg.mesh.rotation.z = ud.barrelRoll;
+            } else {
+              seg.mesh.rotation.z = 0;
+            }
+          }
+
+          // Animate Wings
+          if (ud.wings) {
+            ud.wings.forEach(w => {
+              const flap = Math.sin(ud.phase * 0.2) * 0.4;
+              w.mesh.rotation.z = w.side > 0 ? -Math.PI / 2.2 + flap : Math.PI / 2.2 - flap;
+            });
+          }
+        }
+      });
+
+      renderer.render(scene, camera);
+    }
+    renderer.setAnimationLoop(animate);
+  </script>
+</body>
+
+</html>
