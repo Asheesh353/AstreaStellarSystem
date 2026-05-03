@@ -19,7 +19,7 @@ canvas{display:block}
 </style>
 </head>
 <body>
-<div id="title"><h1>✦ PLANET SPE ✦</h1><p>DRAG TO LOOK · ARROW/WASD KEYS TO MOVE · SCROLL TO ZOOM · HOVER CREATURES</p></div>
+<div id="title"><h1>✦ PLANET SPE ✦</h1><p>DRAG TO LOOK · ARROW/WASD KEYS TO MOVE · SPACE TO FEED (DOUBLE TAP FOR SEEDS) · SCROLL TO ZOOM · HOVER CREATURES</p></div>
 <div id="info">
   <div class="tag">🐦 Fwoopers</div>
   <div class="tag">🐇 Mintari</div>
@@ -417,11 +417,36 @@ const keys = {
 
 let zoom = 10;
   
+let spaceTimeout = null;
 document.addEventListener("keydown", (e)=>{
   if(e.key === "ArrowUp" || e.key === "w") keys.forward = true;
   if(e.key === "ArrowDown" || e.key === "s") keys.backward = true;
   if(e.key === "ArrowLeft" || e.key === "a") keys.left = true;
   if(e.key === "ArrowRight" || e.key === "d") keys.right = true;
+  if(e.code === "Space") {
+    if(spaceTimeout) {
+      clearTimeout(spaceTimeout);
+      spaceTimeout = null;
+      if(seeds.filter(s=>s.active).length < 15) {
+        for(let i=0;i<4;i++){
+          const s=new THREE.Mesh(new THREE.SphereGeometry(0.06,6,6),new THREE.MeshLambertMaterial({color:0xddaa44}));
+          s.position.set(player.x+(Math.random()-0.5)*1.5, 0.06, player.z+(Math.random()-0.5)*1.5);
+          scene.add(s);
+          seeds.push({mesh:s, x:s.position.x, z:s.position.z, active:true});
+        }
+      }
+    } else {
+      spaceTimeout = setTimeout(()=>{
+        spaceTimeout = null;
+        if(berries.filter(b=>b.active).length < 8) {
+          const b=new THREE.Mesh(new THREE.SphereGeometry(0.12,8,8),new THREE.MeshLambertMaterial({color:0xff2255}));
+          b.position.set(player.x, 0.12, player.z);
+          scene.add(b);
+          berries.push({mesh:b, x:player.x, z:player.z, active:true});
+        }
+      }, 250);
+    }
+  }
 });
 
 document.addEventListener("keyup", (e)=>{
@@ -434,10 +459,63 @@ document.addEventListener("keyup", (e)=>{
 // ─── ANIMATE ──────────────────────────────────────────────────────────────
 let t=0;
 const BOUNDS=28;
-function wander(ud,dt){
-  ud.angle+=((Math.random()-0.5)*0.05);
-  ud.tx+=Math.cos(ud.angle)*ud.speed*dt;
-  ud.tz+=Math.sin(ud.angle)*ud.speed*dt;
+const berries = [];
+const seeds = [];
+const hearts = [];
+
+function createHeartTexture() {
+  const c = document.createElement('canvas');
+  c.width=64;c.height=64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle='#ff3366';
+  ctx.font='48px Arial';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText('❤',32,35);
+  return new THREE.CanvasTexture(c);
+}
+const heartMat = new THREE.SpriteMaterial({map:createHeartTexture(),color:0xffffff});
+
+function spawnHeart(x,y,z){
+  const h=new THREE.Sprite(heartMat);
+  h.position.set(x,y,z);
+  h.scale.set(0.6,0.6,0.6);
+  scene.add(h);
+  hearts.push({mesh:h,time:0});
+}
+
+function updateAI(ud,dt){
+  let closest = null, minDist = 12;
+  for(let b of berries) {
+    if(!b.active) continue;
+    const d = Math.hypot(b.x - ud.tx, b.z - ud.tz);
+    if(d < minDist) { minDist = d; closest = b; }
+  }
+
+  if(closest) {
+    ud.angle = Math.atan2(closest.z - ud.tz, closest.x - ud.tx);
+    if(minDist > 0.8) {
+      ud.tx += Math.cos(ud.angle) * ud.speed * dt * 2.0;
+      ud.tz += Math.sin(ud.angle) * ud.speed * dt * 2.0;
+      ud.isEating = false;
+    } else {
+      ud.isEating = true;
+      if(!ud.eatTimer) ud.eatTimer = 0;
+      ud.eatTimer += dt;
+      if(ud.eatTimer > 1.2) {
+        closest.active = false;
+        scene.remove(closest.mesh);
+        spawnHeart(ud.tx, 1.2, ud.tz);
+        ud.eatTimer = 0;
+        ud.isEating = false;
+      }
+    }
+  } else {
+    ud.isEating = false;
+    ud.angle+=((Math.random()-0.5)*0.05);
+    ud.tx+=Math.cos(ud.angle)*ud.speed*dt;
+    ud.tz+=Math.sin(ud.angle)*ud.speed*dt;
+  }
   if(ud.tx>BOUNDS)ud.tx=BOUNDS-0.1;if(ud.tx<-BOUNDS)ud.tx=-BOUNDS+0.1;
   if(ud.tz>BOUNDS)ud.tz=BOUNDS-0.1;if(ud.tz<-BOUNDS)ud.tz=-BOUNDS+0.1;
 }
@@ -475,35 +553,85 @@ camera.lookAt(player.x, 3, player.z);
 fwoopers.forEach(f=>{
   const ud = f.userData;
 
-  // Move forward
-  ud.angle += 0.01;
-  f.position.x += Math.cos(ud.angle) * ud.speed * 0.05;
-  f.position.z += Math.sin(ud.angle) * ud.speed * 0.05;
+  let closest = null, minDist = 25;
+  for(let s of seeds) {
+    if(!s.active) continue;
+    const d = Math.hypot(s.x - f.position.x, s.z - f.position.z);
+    if(d < minDist) { minDist = d; closest = s; }
+  }
 
-  // Float up/down
-  f.position.y += Math.sin(t*2 + ud.phase) * 0.03;
+  if(closest) {
+    ud.angle = Math.atan2(closest.z - f.position.z, closest.x - f.position.x);
+    if(minDist > 0.4 || f.position.y > 0.4) {
+      f.position.x += Math.cos(ud.angle) * ud.speed * dt * 3.5;
+      f.position.z += Math.sin(ud.angle) * ud.speed * dt * 3.5;
+      f.position.y += (0.15 - f.position.y) * 0.08;
+      ud.isEating = false;
+      f.rotation.x = 0;
+    } else {
+      ud.isEating = true;
+      if(!ud.eatTimer) ud.eatTimer = 0;
+      ud.eatTimer += dt;
+      f.rotation.x = Math.sin(t*15)*0.3; // peck
+      if(ud.eatTimer > 1.2) {
+        closest.active = false;
+        scene.remove(closest.mesh);
+        spawnHeart(f.position.x, 0.8, f.position.z);
+        ud.eatTimer = 0;
+        ud.isEating = false;
+        ud.targetY = 6 + Math.random()*5;
+      }
+    }
+    f.rotation.y = -ud.angle + Math.PI/2;
+  } else {
+    ud.isEating = false;
+    f.rotation.x = 0;
+    ud.angle += 0.01;
+    f.position.x += Math.cos(ud.angle) * ud.speed * 0.05;
+    f.position.z += Math.sin(ud.angle) * ud.speed * 0.05;
+    if(!ud.targetY) ud.targetY = 6 + Math.random()*5;
+    f.position.y += (ud.targetY - f.position.y) * 0.02;
+    f.position.y += Math.sin(t*2 + ud.phase) * 0.03;
+    f.rotation.y = ud.angle;
+  }
 
-  // Face direction
-  f.rotation.y = ud.angle;
-
-  // Wrap around world
   const limit = 30;
   if(f.position.x > limit) f.position.x = -limit;
   if(f.position.x < -limit) f.position.x = limit;
   if(f.position.z > limit) f.position.z = -limit;
   if(f.position.z < -limit) f.position.z = limit;
 
-  // Wing flapping
   ud.wings.forEach((wing,i)=>{
-    wing.rotation.z = Math.sin(t*6 + ud.phase) * (i===0 ? 0.5 : -0.5);
+    wing.rotation.z = Math.sin(t*(ud.isEating?2:6) + ud.phase) * (i===0 ? 0.5 : -0.5);
   });
 });
 
+  // Update hearts
+  for(let i=hearts.length-1;i>=0;i--){
+    const h=hearts[i];
+    h.time+=dt;
+    h.mesh.position.y+=dt*0.8;
+    h.mesh.material.opacity=1-(h.time/2);
+    if(h.time>2){scene.remove(h.mesh);hearts.splice(i,1);}
+  }
+  // Cleanup berries
+  for(let i=berries.length-1;i>=0;i--){
+    if(!berries[i].active) berries.splice(i,1);
+  }
+  // Cleanup seeds
+  for(let i=seeds.length-1;i>=0;i--){
+    if(!seeds[i].active) seeds.splice(i,1);
+  }
+
   // Mintari hop
   mintaris.forEach(m=>{
-    wander(m.userData,dt);
+    updateAI(m.userData,dt);
     m.position.x=m.userData.tx;m.position.z=m.userData.tz;
-    m.position.y=Math.max(0,Math.sin(t*4+m.userData.hopPhase)*0.15);
+    if(m.userData.isEating) {
+      m.position.y=Math.max(0,Math.sin(t*15)*0.05);
+    } else {
+      m.position.y=Math.max(0,Math.sin(t*4+m.userData.hopPhase)*0.15);
+    }
     m.rotation.y=m.userData.angle+Math.PI;
     // Ear wiggle
     if(m.children[2])m.children[2].rotation.z=Math.sin(t*3+m.userData.phase)*0.15;
@@ -512,9 +640,15 @@ fwoopers.forEach(f=>{
 
   // Aureli strut
   aurelis.forEach(a=>{
-    wander(a.userData,dt);
+    updateAI(a.userData,dt);
     a.position.x=a.userData.tx;a.position.z=a.userData.tz;
-    a.position.y=Math.abs(Math.sin(t*1.5+a.userData.phase))*0.06;
+    if(a.userData.isEating) {
+      a.position.y=0;
+      a.rotation.x = Math.sin(t*10)*0.15 - 0.15;
+    } else {
+      a.position.y=Math.abs(Math.sin(t*1.5+a.userData.phase))*0.06;
+      a.rotation.x = 0;
+    }
     a.rotation.y=a.userData.angle+Math.PI;
     if(a.userData.fanGroup) a.userData.fanGroup.rotation.x=-0.3+Math.sin(t*0.8+a.userData.phase)*0.1;
   });
