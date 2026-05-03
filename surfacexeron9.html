@@ -127,7 +127,7 @@
   <a href="index.html" id="backbtn">⟵ SYSTEM EXPLORER</a>
   <div id="title">
     <h1>✦ XERON-9 SURFACE ✦</h1>
-    <p>WASD / ARROWS TO MOVE · SPACE TO FEED · DRAG TO LOOK · HOVER CREATURES</p>
+    <p>WASD / ARROWS TO MOVE · SPACE TO FEED (DOUBLE TAP FOR BLOBS) · DRAG TO LOOK · HOVER CREATURES</p>
   </div>
   <div id="info">
     <div class="tag">🐉 Dracaena</div>
@@ -147,16 +147,16 @@
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     document.body.appendChild(renderer.domElement);
 
     // Lights
     const moonLight = new THREE.DirectionalLight(0xaaeeff, 0.6);
     moonLight.position.set(-20, 30, -20);
     moonLight.castShadow = true;
-    moonLight.shadow.mapSize.width = 2048; moonLight.shadow.mapSize.height = 2048;
+    moonLight.shadow.mapSize.width = 1024; moonLight.shadow.mapSize.height = 1024;
     moonLight.shadow.camera.near = 0.5; moonLight.shadow.camera.far = 100;
     moonLight.shadow.camera.left = -50; moonLight.shadow.camera.right = 50;
     moonLight.shadow.camera.top = 50; moonLight.shadow.camera.bottom = -50;
@@ -195,7 +195,7 @@
     moon2.add(moonGlow2);
 
     // Ocean
-    const oceanGeo = new THREE.PlaneGeometry(300, 300, 60, 60);
+    const oceanGeo = new THREE.PlaneGeometry(300, 300, 30, 30);
     const oceanMat = new THREE.MeshPhongMaterial({
       color: 0x0a2a66, emissive: 0x040a1a, shininess: 30, specular: 0x335588, transparent: true, opacity: 0.85,
       flatShading: true
@@ -247,12 +247,9 @@
           const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.5), new THREE.MeshLambertMaterial({ color: 0x223344 }));
           stem.position.set(px, h + 0.25, pz);
           scene.add(stem);
-          const cap = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x88ffcc, emissive: 0x228866 }));
+          const cap = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x88ffcc, emissive: 0x66ffaa }));
           cap.position.set(px, h + 0.5, pz);
           scene.add(cap);
-          const glow = new THREE.PointLight(0x88ffcc, 0.3, 2);
-          glow.position.set(px, h + 0.6, pz);
-          scene.add(glow);
         } else {
           // Tube plant
           const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8), new THREE.MeshLambertMaterial({ color: 0xcc44ff, emissive: 0x6611aa }));
@@ -308,8 +305,8 @@
       };
 
       // Light
-      const light = new THREE.PointLight(0xcc66ff, 0.5, 4);
-      g.add(light);
+      // Light removed for performance, using emissive head instead
+      headMat.emissive.setHex(0xaa44ff);
 
       scene.add(g);
       animals.push(g);
@@ -452,8 +449,8 @@
       let island = islands[Math.floor(Math.random() * islands.length)];
       g.position.set(island.x + (Math.random() - 0.5) * island.r, 0, island.z + (Math.random() - 0.5) * island.r);
 
-      g.castShadow = true;
-      g.traverse(c => { if (c.isMesh && c.material !== ribbonMat && c.material !== antlerMat && c.material !== spotsMat) c.castShadow = true });
+      g.castShadow = false;
+      g.traverse(c => { if (c.isMesh) c.castShadow = false });
 
       g.userData = {
         type: 'Stag', name: 'Lumindoe', desc: 'A majestic starry deer with intricate glowing antlers and ethereal ribbons. 🦌',
@@ -507,14 +504,13 @@
       tail.position.set(-0.25, 0.25, 0);
       g.add(tail);
 
-      const light = new THREE.PointLight(0xffaadd, 0.3, 2);
-      g.add(light);
+      // Light removed for performance
 
       let island = islands[Math.floor(Math.random() * islands.length)];
       g.position.set(island.x + (Math.random() - 0.5) * island.r, 0, island.z + (Math.random() - 0.5) * island.r);
 
-      g.castShadow = true;
-      g.traverse(c => { if (c.isMesh) c.castShadow = true });
+      g.castShadow = false;
+      g.traverse(c => { if (c.isMesh) c.castShadow = false });
 
       g.userData = {
         type: 'Bunny', name: 'Lumibuns', desc: 'A tiny, extremely cute glowing pink bunny. Hops energetically. 🐇',
@@ -661,7 +657,7 @@
         tx: 0, tz: 60, isBreaching: false, breachTimer: 0
       };
 
-      g.traverse(c => { if (c.isMesh) c.castShadow = true });
+      g.traverse(c => { if (c.isMesh) c.castShadow = false });
       scene.add(g);
       animals.push(g);
     }
@@ -867,8 +863,8 @@
       for (let i = 0; i < pos.count; i++) {
         const x = origOceanZ[i * 3];
         const y = origOceanZ[i * 3 + 1];
-        // Create tidal surge effect
-        const z = Math.sin(x * 0.1 + time) * 0.5 + Math.sin(y * 0.1 + time * 1.2) * 0.5 + Math.sin((x + y) * 0.05 + time * 0.5) * 1.2;
+        // Simplified wave math
+        const z = Math.sin(x * 0.1 + time) * 0.8 + Math.sin(y * 0.1 + time * 0.7) * 0.5;
         pos.setZ(i, z);
       }
       pos.needsUpdate = true;
@@ -1054,7 +1050,7 @@
           }
         } else if (ud.type === 'Serpent') {
           // Food search
-          let closestStar = null, minStarDist = 40;
+          let closestStar = null, minStarDist = 500;
           for (let f of starFruits) {
             if (!f.active) continue;
             const d = Math.hypot(f.x - ud.segments[0].mesh.position.x, f.z - ud.segments[0].mesh.position.z);
@@ -1068,7 +1064,7 @@
             ud.tx = closestStar.x;
             ud.tz = closestStar.z;
             ud.isBreaching = true; // Stay on surface to eat
-            ud.baseY += (1.5 - ud.baseY) * 0.1;
+            ud.baseY += (1.5 - ud.baseY) * 0.8;
           } else {
             ud.angle += dt * 0.15;
             const r = 60; // Wide circle
@@ -1081,7 +1077,7 @@
               ud.breachTimer = 0;
             }
             const targetBaseY = ud.isBreaching ? 1.5 : -5;
-            ud.baseY += (targetBaseY - ud.baseY) * 0.02;
+            ud.baseY += (targetBaseY - ud.baseY) * 0.08;
           }
 
           // Update head
@@ -1091,7 +1087,7 @@
           const distToTarget = Math.sqrt(hdx * hdx + hdz * hdz);
 
           if (distToTarget > 0.1) {
-            const moveSpd = closestStar ? 15 : 5;
+            const moveSpd = closestStar ? 65 : 15;
             headSeg.mesh.position.x += (hdx / distToTarget) * moveSpd * dt;
             headSeg.mesh.position.z += (hdz / distToTarget) * moveSpd * dt;
             headSeg.mesh.rotation.y = Math.atan2(hdx, hdz);
@@ -1135,8 +1131,8 @@
             const dist = Math.sqrt(pdx * pdx + pdz * pdz);
 
             if (dist > idealDist) {
-              seg.mesh.position.x += (pdx / dist) * (dist - idealDist) * 0.2;
-              seg.mesh.position.z += (pdz / dist) * (dist - idealDist) * 0.2;
+              seg.mesh.position.x += (pdx / dist) * (dist - idealDist) * 0.9;
+              seg.mesh.position.z += (pdz / dist) * (dist - idealDist) * 0.9;
             }
             seg.mesh.rotation.y = Math.atan2(pdx, pdz);
 
